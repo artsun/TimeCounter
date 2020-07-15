@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<title></title>
+</head>
+<body>
+	<div id="myCalendar" class="vanilla-calendar"></div>
+			<link rel="stylesheet" href="/css/vanilla-calendar-min.css">
+	<script src="/js/vanilla-calendar-min.js"></script>
+	
+	<script type="text/javascript">
+	function send_selected_date(data, elem) {
+		console.log(data);
+		selected_date = new Date(data['date']);							
+		console.log(selected_date.getDate(), selected_date.getMonth(), selected_date.getFullYear());
+		console.log(document.location.href);
+		fetch(`${document.location.href}?day=${selected_date.getDate()}&month=${selected_date.getMonth()}&year=${selected_date.getFullYear()}`);
+
+		//new URL(document.location.href + '?day=' + selected_date.getDate())
+
+								  };
+
+	let myCalendar = new VanillaCalendar({
+										    selector: "#myCalendar",
+										    pastDates: 1,
+										    datesFilter: 0,
+										    onSelect: (data, elem) => { somefunc(data, elem) },
+										    date: new Date(),
+										    todaysDate: new Date(),
+										    availableWeekDays: [
+      															//{day: 'monday', others: values},
+      					    									],
+										    availableDates: [
+										      					//{date: '2020-07-07', others: values},
+										    				],
+										    months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+										    shortWeekday: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+										})
+
+
+	</script>
+
+
+
+
+</body>
+</html>
