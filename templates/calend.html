@@ -3,10 +3,50 @@
 <head>
 
 	<title></title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
 </head>
 <body>
-	<div id="myCalendar" class="vanilla-calendar"></div>
-			<link rel="stylesheet" href="/css/vanilla-calendar-min.css">
+
+<div class="container ml-5">
+  <div class="row">HEAD | Посмотреть сводки: за неделю, месяц, год
+  </div>
+  <div class="row">
+    <div class="col-5">
+      <div id="myCalendar" class="vanilla-calendar"></div>
+    </div>
+    <div class="col">
+      VIEW INFO Осталось сегодня | Перерывы | Текущее время
+    </div>
+    <div class="col-1">
+<!--clock start-->
+<div class="clock">
+  <div class="hour">
+    <div class="hr" id="hr">
+    </div>
+  </div>
+  <div class="min">
+    <div class="mn" id="mn">
+    </div>
+  </div>
+  <div class="sec">
+    <div class="sc" id="sc">
+    </div>
+  </div>
+</div>
+<!--clock end-->
+     </div>
+  </div>
+  <div class="row">SETTING PARAMETERS | старт |  изменить продолжительность рабочего дня | поставить на паузу/продолжить (перерыв) | финиш </div>
+</div>
+
+
+
+<link rel="stylesheet" href="/css/vis_clock.css" />
+<script src="/js/vis_clock.js"></script>
+
+	<!---->
+
+	<link rel="stylesheet" href="/css/vanilla-calendar-min.css">
 	<script src="/js/vanilla-calendar-min.js"></script>
 	
 	<script type="text/javascript">
@@ -25,7 +65,7 @@
 										    selector: "#myCalendar",
 										    pastDates: 1,
 										    datesFilter: 0,
-										    onSelect: (data, elem) => { somefunc(data, elem) },
+										    onSelect: (data, elem) => { send_selected_date(data, elem) },
 										    date: new Date(),
 										    todaysDate: new Date(),
 										    availableWeekDays: [
@@ -39,10 +79,11 @@
 										})
 
 
-	</script>
+</script>
 
 
-
-
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
 </body>
 </html>
