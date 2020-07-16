@@ -2,8 +2,11 @@
 
 from flask import request, render_template, redirect, Blueprint, flash, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import login_user
+
 from .models import User
 from . import db
+
 
 from .forms import RegistrationForm
 
@@ -41,6 +44,24 @@ auth = Blueprint('auth', __name__)
 def login():
     return render_template('login.html')
 
+@auth.route('/login', methods=['POST'])
+def login_post():
+    email = request.form.get('email')
+    password = request.form.get('password')
+    remember = True if request.form.get('remember') else False
+
+    user = User.query.filter_by(email=email).first()
+
+    # check if the user actually exists
+    # take the user-supplied password, hash it, and compare it to the hashed password in the database
+    if not user or not check_password_hash(user.password, password):
+        flash('Please check your login details and try again.')
+        return redirect(url_for('auth.login')) # if the user doesn't exist or password is wrong, reload the page
+
+    # if the above check passes, then we know the user has the right credentials
+    login_user(user, remember=remember)
+    return redirect(url_for('index_bp.profile_page'))
+
 
 @auth.route('/signup')
 def signup():
@@ -57,6 +78,7 @@ def signup_post():
     user = User.query.filter_by(email=email).first() # if this returns a user, then the email already exists in database
 
     if user: # if a user is found, we want to redirect back to signup page so user can try again
+        flash('Email address already exists')
         return redirect(url_for('auth.signup'))
 
     # create a new user with the form data. Hash the password so the plaintext version isn't saved.
@@ -72,17 +94,3 @@ def signup_post():
 @auth.route('/logout')
 def logout():
     return 'Logout'
-
-# @bp.route('/', methods=['GET'])
-# def register():
-#     form = RegistrationForm(request.form)
-#     # if request.method == 'POST' and form.validate():
-#     #     #user = User(form.username.data, form.email.data, form.password.data)
-#     #     #db_session.add(user)
-#     #     flash('Thanks for registering')
-#     #     return redirect(url_for('login'))
-#     return render_template('auth.html', form=form)
-
-
-
-#redirect("http://www.example.com", code=302)
