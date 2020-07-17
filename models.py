@@ -18,7 +18,7 @@ class Day(db.Model):
     pk = db.Column(db.Integer, primary_key=True)
     user_pk = db.Column(db.Integer, db.ForeignKey('user.pk'))
     start = db.Column(db.DateTime, default=datetime.now)
-    longitude = db.Column(db.Integer(10))
+    longitude = db.Column(db.Integer())
 
 
 class Break(db.Model):
