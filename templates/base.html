@@ -7,28 +7,54 @@
 </head>
 <body>
 <div class="row">
-<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
-  <a class="navbar-brand" href="#">Navbar</a>
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo02" aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-
-  <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
-    <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
-      <li class="nav-item active">
-        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="#">Link</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
-      </li>
-    </ul>
-  </div>
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+    <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
+        <ul class="navbar-nav mr-auto">
+            {% if current_user.is_authenticated %}
+            <li class="nav-item">
+                <a class="nav-link" href="#">Link</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Link</a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+    <div class="mx-auto order-0">
+        <a class="navbar-brand mx-auto" href="#">TimeCounter</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".dual-collapse2">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+    <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('indx.indx_page') }}">Home</a>
+            </li>
+            {% if current_user.is_authenticated %}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('indx.profile_page') }}">Profile</a>
+            </li>
+            {% endif %}
+            {% if not current_user.is_authenticated %}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('auth.signup') }}">Sign Up</a>
+            </li>
+            {% endif %}
+            {% if current_user.is_authenticated %}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
 </nav>
 </div>
 <div class="container ml-5 mt-5 pt-5">
+
 
 {% block content %} {% endblock %}
 

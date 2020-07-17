@@ -2,40 +2,31 @@
 
 from flask import request, render_template, redirect, Blueprint, flash, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import login_user
+from flask_login import login_user, login_required, current_user, logout_user
 
 from .models import User
 from . import db
 
 
-from .forms import RegistrationForm
+indx = Blueprint('indx', __name__)
 
-index_bp = Blueprint('index_bp', __name__)
 
-@index_bp.route('/')
-def index_page():
+@indx.route('/')
+def indx_page():
     return render_template('index.html')
 
-@index_bp.route('/profile')
+
+@indx.route('/profile')
+@login_required
 def profile_page():
-    return render_template('profile.html')
-
-
-calend_bp = Blueprint('calend_bp', __name__) #, url_prefix='/'
-
-
-@calend_bp.route('/cal', methods=['GET'])
-def calendar_page():
-    """
-    обработка REST-запроса GET
-    """
     if request.method == 'GET':
         #request.args.get('url')
         print(request.args)
     else:
-        res = 'Incorrect request. Try: url=https://...'
+        res = 'Incorrect request'
 
-    return render_template('calend.html', data='')
+    return render_template('calend.html', name=current_user.name, ishold=False)
+
 
 auth = Blueprint('auth', __name__)
 
@@ -43,6 +34,7 @@ auth = Blueprint('auth', __name__)
 @auth.route('/login')
 def login():
     return render_template('login.html')
+
 
 @auth.route('/login', methods=['POST'])
 def login_post():
@@ -52,15 +44,12 @@ def login_post():
 
     user = User.query.filter_by(email=email).first()
 
-    # check if the user actually exists
-    # take the user-supplied password, hash it, and compare it to the hashed password in the database
     if not user or not check_password_hash(user.password, password):
         flash('Please check your login details and try again.')
-        return redirect(url_for('auth.login')) # if the user doesn't exist or password is wrong, reload the page
+        return redirect(url_for('auth.login'))
 
-    # if the above check passes, then we know the user has the right credentials
     login_user(user, remember=remember)
-    return redirect(url_for('index_bp.profile_page'))
+    return redirect(url_for('indx.profile_page'))
 
 
 @auth.route('/signup')
@@ -75,16 +64,14 @@ def signup_post():
     password = request.form.get('password')
     print(email, name, password)
 
-    user = User.query.filter_by(email=email).first() # if this returns a user, then the email already exists in database
+    user = User.query.filter_by(email=email).first()
 
-    if user: # if a user is found, we want to redirect back to signup page so user can try again
+    if user:
         flash('Email address already exists')
         return redirect(url_for('auth.signup'))
 
-    # create a new user with the form data. Hash the password so the plaintext version isn't saved.
     new_user = User(email=email, name=name, password=generate_password_hash(password, method='sha256'))
 
-    # add the new user to the database
     db.session.add(new_user)
     db.session.commit()
 
@@ -93,4 +80,5 @@ def signup_post():
 
 @auth.route('/logout')
 def logout():
-    return 'Logout'
+    logout_user()
+    return redirect(url_for('indx.indx_page'))
