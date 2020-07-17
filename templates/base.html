@@ -12,10 +12,7 @@
         <ul class="navbar-nav mr-auto">
             {% if current_user.is_authenticated %}
             <li class="nav-item">
-                <a class="nav-link" href="#">Link</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="#">Link</a>
+                <a class="nav-link" href="#">Статистика <b>{{name}}</b></a>
             </li>
             {% endif %}
         </ul>
@@ -29,24 +26,24 @@
     <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
         <ul class="navbar-nav ml-auto">
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('indx.indx_page') }}">Home</a>
+                <a class="nav-link" href="{{ url_for('common.main_page') }}">Главная</a>
             </li>
             {% if current_user.is_authenticated %}
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('indx.profile_page') }}">Profile</a>
+                <a class="nav-link" href="{{ url_for('common.profile_page') }}">Профиль</a>
             </li>
             {% endif %}
             {% if not current_user.is_authenticated %}
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                <a class="nav-link" href="{{ url_for('auth.login_page') }}">Авторизоваться</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('auth.signup') }}">Sign Up</a>
+                <a class="nav-link" href="{{ url_for('auth.signup_page') }}">Регистрация</a>
             </li>
             {% endif %}
             {% if current_user.is_authenticated %}
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+                <a class="nav-link" href="{{ url_for('auth.logout_page') }}">Выход</a>
             </li>
             {% endif %}
         </ul>
