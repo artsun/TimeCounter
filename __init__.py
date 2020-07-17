@@ -25,10 +25,10 @@ def create_app():
     def load_user(user_pk):
         return User.query.get(int(user_pk))
 
-    from .views import auth as auth_blueprint
-    app.register_blueprint(auth_blueprint)
+    from .views import auth
+    app.register_blueprint(auth)
 
-    from .views import indx
-    app.register_blueprint(indx)
+    from .views import common
+    app.register_blueprint(common)
 
     return app
