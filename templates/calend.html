@@ -3,9 +3,6 @@
 
 {% block content %}
 
-
-  <div class="row">HEAD | Посмотреть сводки: за неделю, месяц, год <br> {{name}}
-  </div>
   <div class="row">
     <div class="col-5">
       <div id="myCalendar" class="vanilla-calendar"></div>
@@ -33,9 +30,11 @@
 <!--clock end-->
      </div>
   </div>
+
+
   <div class="row">
       <div class="col-3">
-      <form method="GET" action="/profile">
+      <form method="GET" action="/">
       <div class="input-group">
           <input type="number" class="form-control" id="begind" name="begind" placeholder="часов" min="1" max="16" value="8">
           <button class="btn btn-outline-secondary">Старт</button>
@@ -43,7 +42,7 @@
           </form>
       </div>
       <div class="col-3">
-      <form method="GET" action="/profile">
+      <form method="GET" action="/">
       <div class="input-group">
       <input type="number" class="form-control" id="changed" name="changed" placeholder="часов" min="0" max="16" value="0">
           <button class="btn btn-outline-secondary">Изменить</button>
@@ -51,14 +50,20 @@
           </form>
   </div>
             <div class="col-3">
-      <form method="GET" action="/profile">
+      <form method="GET" action="/">
       <div class="input-group">
           <button class="btn btn-outline-secondary" name="ishold" value="{{ishold}}" >Пауза</button>
           </div>
           </form>
   </div>
+      <div class="col-3">
+      <form method="GET" action="/">
+      <div class="input-group">
+          <button class="btn btn-outline-secondary" name="finish" value="true">Завершить</button>
+          </div>
+          </form>
   </div>
-<div class="row">SETTING PARAMETERS  поставить на паузу/продолжить (перерыв) | финиш</div>
+  </div>
 
         <!--dyn clock-->
 <script type="text/javascript">
