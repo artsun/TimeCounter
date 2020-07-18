@@ -18,18 +18,27 @@ def main_page():
     cuser = '' if is_anon == (False, False, True) else current_user.name
 
     if request.args.get('refreshLeftTime') is not None:
-        day = Wday.query.filter_by(user_pk=User.query.filter_by(name=cuser).first().pk)
-        day = [x for x in day if x.start.day==datetime.now().day]
-        print(day)
-        return dict(getHours=7, getMinutes=1, getSeconds=10)
+        day = Wday.by_user_today(User.by_name(name=cuser).pk)
+        h, m, s = (0, 0, 0) if day is None else day.delta()
+        return dict(getHours=h, getMinutes=m, getSeconds=s)
 
-    if request.form.get("begind") is not None:
-        begind = int(request.form.get("begind"))
-        day = Wday(user_pk=User.query.filter_by(name=cuser).first().pk, longitude=begind)
-        db.session.add(day)
-        db.session.commit()
+    if Wday.by_user_today(User.by_name(name=cuser).pk) is None:
+        begind = 8
+        if request.form.get("begind") is not None:
+            begind = int(request.form.get("begind"))
+            day = Wday(user_pk=User.by_name(name=cuser).pk, longitude=begind)
+            day.correct_session(db)
+    else:
+        day = Wday.by_user_today(User.by_name(name=cuser).pk)
+        begind = day.longitude
+        if request.form.get("changed") is not None:
+            changed = int(request.form.get("changed"))
+            day.longitude = changed
+            day.correct_session(db)
+            begind = day.longitude
 
-    return render_template('calend.html', cuser=cuser, ishold=False)
+
+    return render_template('calend.html', cuser=cuser, ishold=False, begind=begind)
 
 
 @common.route('/profile')
@@ -86,7 +95,7 @@ def signup_post_page():
         flash('Данная почта уже зарегистрирована')
         return redirect(url_for('auth.signup_page'))
 
-    new_user = User(email=email, name=name, password=generate_password_hash(password, method='sha256'))
+    new_user = User(email=email, password=generate_password_hash(password, method='sha256'), name=name)
 
     db.session.add(new_user)
     db.session.commit()
