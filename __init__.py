@@ -2,6 +2,8 @@ import os.path
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+import base64
+
 
 db = SQLAlchemy()
 
@@ -23,7 +25,8 @@ def create_app():
 
     @login_manager.user_loader
     def load_user(user_pk):
-        return User.query.get(int(user_pk))
+        print('USER_PK', user_pk)
+        return User.query.get(user_pk) if not isinstance(user_pk, int) else None
 
     from .views import auth
     app.register_blueprint(auth)
