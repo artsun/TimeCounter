@@ -1,22 +1,35 @@
 # -*- coding: utf-8 -*-
 
-from flask import request, render_template, redirect, Blueprint, flash, url_for
+from flask import request, render_template, redirect, Blueprint, flash, url_for, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, login_required, current_user, logout_user, AnonymousUserMixin
+from datetime import datetime
 
-from .models import User
+from .models import User, Wday
 from . import db
 
 
 common = Blueprint('common', __name__)
 
 
-@common.route('/')
+@common.route('/', methods=['POST', 'GET'])
 def main_page():
-    cuser = '' if not current_user.is_active and not current_user.is_authenticated and current_user.is_anonymous else current_user.name
+    is_anon = (current_user.is_active, current_user.is_authenticated, current_user.is_anonymous)
+    cuser = '' if is_anon == (False, False, True) else current_user.name
 
-    print()
-    return render_template('calend.html', name=cuser, ishold=False)
+    #if request.args.get('refreshLeftTime') is not None:
+        # day = Wday.query.filter_by(user_pk=User.query.filter_by(name=cuser).first().pk)
+        # day = [x for x in day if x.start.day==datetime.now().day]
+        # print(day)
+        # return dict(getHours=7, getMinutes=1, getSeconds=10)
+
+    # if request.form.get("begind") is not None:
+    #     begind = int(request.form.get("begind"))
+    #     day = Wday(user_pk=User.query.filter_by(name=cuser).first().pk, longitude=begind)
+    #     db.session.add(day)
+    #     db.session.commit()
+
+    return render_template('calend.html', cuser=cuser, ishold=False)
 
 
 @common.route('/profile')
@@ -41,14 +54,14 @@ def login_page():
 
 @auth.route('/login', methods=['POST'])
 def login_post_page():
-    email = request.form.get('email')
+    username = request.form.get('username')
     password = request.form.get('password')
     remember = True if request.form.get('remember') else False
 
-    user = User.query.filter_by(email=email).first()
+    user = User.query.filter_by(name=username).first()
 
     if not user or not check_password_hash(user.password, password):
-        flash('Введите корректные данные')
+        flash('Введён неверный пароль, либо пользователь не существует')
         return redirect(url_for('auth.login_page'))
 
     login_user(user, remember=remember)
