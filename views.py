@@ -17,17 +17,17 @@ def main_page():
     is_anon = (current_user.is_active, current_user.is_authenticated, current_user.is_anonymous)
     cuser = '' if is_anon == (False, False, True) else current_user.name
 
-    #if request.args.get('refreshLeftTime') is not None:
-        # day = Wday.query.filter_by(user_pk=User.query.filter_by(name=cuser).first().pk)
-        # day = [x for x in day if x.start.day==datetime.now().day]
-        # print(day)
-        # return dict(getHours=7, getMinutes=1, getSeconds=10)
+    if request.args.get('refreshLeftTime') is not None:
+        day = Wday.query.filter_by(user_pk=User.query.filter_by(name=cuser).first().pk)
+        day = [x for x in day if x.start.day==datetime.now().day]
+        print(day)
+        return dict(getHours=7, getMinutes=1, getSeconds=10)
 
-    # if request.form.get("begind") is not None:
-    #     begind = int(request.form.get("begind"))
-    #     day = Wday(user_pk=User.query.filter_by(name=cuser).first().pk, longitude=begind)
-    #     db.session.add(day)
-    #     db.session.commit()
+    if request.form.get("begind") is not None:
+        begind = int(request.form.get("begind"))
+        day = Wday(user_pk=User.query.filter_by(name=cuser).first().pk, longitude=begind)
+        db.session.add(day)
+        db.session.commit()
 
     return render_template('calend.html', cuser=cuser, ishold=False)
 
