@@ -89,13 +89,13 @@
       <div class="col-3">
       <form method="POST" action="/">
       <div class="input-group">
-          <input type="number" class="form-control" id="begind" name="begind" placeholder="часов" min="1" max="16" value="8">
+          <input type="number" class="form-control" id="begind" name="begind" placeholder="часов" min="1" max="16" value="{{begind}}">
           <button class="btn btn-outline-secondary">Старт</button>
         </div>
           </form>
       </div>
       <div class="col-3">
-      <form method="GET" action="/">
+      <form method="POST" action="/">
       <div class="input-group">
       <input type="number" class="form-control" id="changed" name="changed" placeholder="часов" min="0" max="16" value="0">
           <button class="btn btn-outline-secondary">Изменить</button>
@@ -144,12 +144,10 @@
                 m -= 1;
             } else {
                 m = (h>0) ? 59 : 0;
-                if (h > 0){
-                    h -= 1;
-                }
+                s = (m>0) ? 59 : 0;
+                h = (h>0) ? h-1: h;
             }
         }
-
     h_d = (h < 10) ? "0" + h : h;
     m_d = (m < 10) ? "0" + m : m;
     s_d = (s < 10) ? "0" + s : s;
