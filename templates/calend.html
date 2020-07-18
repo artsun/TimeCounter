@@ -1,16 +1,27 @@
 {% extends "base.html" %}
 
 
-{% block content %}
+{% block show %}
 
   <div class="row">
+      {% if current_user.is_authenticated %}
     <div class="col-5">
       <div id="myCalendar" class="vanilla-calendar"></div>
     </div>
     <div class="col">
+        Осталось сегодня
         <div id="MyClockDisplay" class="clock-dyn" onload="showTime()"></div>
-      VIEW INFO Осталось сегодня | Перерывы | Текущее время
+        <br>
+        | Перерывы |
     </div>
+      {%endif%}
+
+      {% if not current_user.is_authenticated %}
+      <div class="col-11">
+          <a>Главная страница, Добро пожаловать!!!</a>
+      </div>
+      {%endif%}
+
     <div class="col-1">
 <!--clock start-->
 <div class="clock">
@@ -31,10 +42,52 @@
      </div>
   </div>
 
+<link rel="stylesheet" href="/css/vis_clock.css" />
+<script src="/js/vis_clock.js"></script>
 
+	<!---->
+
+	<link rel="stylesheet" href="/css/vanilla-calendar-min.css">
+	<script src="/js/vanilla-calendar-min.js"></script>
+
+	<script type="text/javascript">
+	function send_selected_date(data, elem) {
+		console.log(data);
+		selected_date = new Date(data['date']);
+		console.log(selected_date.getDate(), selected_date.getMonth(), selected_date.getFullYear());
+		console.log(document.location.href);
+		fetch(`${document.location.href}?day=${selected_date.getDate()}&month=${selected_date.getMonth()}&year=${selected_date.getFullYear()}`);
+
+		//new URL(document.location.href + '?day=' + selected_date.getDate())
+
+								  };
+
+	let myCalendar = new VanillaCalendar({
+										    selector: "#myCalendar",
+										    pastDates: 1,
+										    datesFilter: 0,
+										    onSelect: (data, elem) => { send_selected_date(data, elem) },
+										    date: new Date(),
+										    todaysDate: new Date(),
+										    availableWeekDays: [
+      															//{day: 'monday', others: values},
+      					    									],
+										    availableDates: [
+										      					//{date: '2020-07-07', others: values},
+										    				],
+										    months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+										    shortWeekday: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+										})
+
+
+</script>
+
+ {% endblock %}
+
+{% block control %}
   <div class="row">
       <div class="col-3">
-      <form method="GET" action="/">
+      <form method="POST" action="/">
       <div class="input-group">
           <input type="number" class="form-control" id="begind" name="begind" placeholder="часов" min="1" max="16" value="8">
           <button class="btn btn-outline-secondary">Старт</button>
@@ -67,18 +120,41 @@
 
         <!--dyn clock-->
 <script type="text/javascript">
-        function showTime(){
-    let date = new Date();
-    let h = date.getHours(); // 0 - 23
-    let m = date.getMinutes(); // 0 - 59
-    let s = date.getSeconds(); // 0 - 59
+    let was_started = 1;
+    let h = 0; // 0 - 23
+    let m = 0; // 0 - 59
+    let s = 0; // 0 - 59
+    let cuser = '{{cuser}}';
 
+    async function showTime(){
 
-    h = (h < 10) ? "0" + h : h;
-    m = (m < 10) ? "0" + m : m;
-    s = (s < 10) ? "0" + s : s;
+        if (was_started===1){
+            let response = await fetch(`${document.location.href}?refreshLeftTime=${cuser}`);
+            let resp = await response.json();
+            h = resp['getHours'];
+            m = resp['getMinutes'];
+            s = resp['getSeconds'];
+            was_started = 0;
+        }
+        if (s > 0){
+            s -= 1;
+        } else {
+            s = (m>0) ? 59 : 0;
+            if (m>0){
+                m -= 1;
+            } else {
+                m = (h>0) ? 59 : 0;
+                if (h > 0){
+                    h -= 1;
+                }
+            }
+        }
 
-    let time = h + ":" + m + ":" + s;
+    h_d = (h < 10) ? "0" + h : h;
+    m_d = (m < 10) ? "0" + m : m;
+    s_d = (s < 10) ? "0" + s : s;
+
+    let time = h_d + ":" + m_d + ":" + s_d;
     document.getElementById("MyClockDisplay").innerText = time;
     document.getElementById("MyClockDisplay").textContent = time;
 
@@ -91,44 +167,5 @@ showTime();
 </script>
 
 
-<link rel="stylesheet" href="/css/vis_clock.css" />
-<script src="/js/vis_clock.js"></script>
-
-	<!---->
-
-	<link rel="stylesheet" href="/css/vanilla-calendar-min.css">
-	<script src="/js/vanilla-calendar-min.js"></script>
-	
-	<script type="text/javascript">
-	function send_selected_date(data, elem) {
-		console.log(data);
-		selected_date = new Date(data['date']);							
-		console.log(selected_date.getDate(), selected_date.getMonth(), selected_date.getFullYear());
-		console.log(document.location.href);
-		fetch(`${document.location.href}?day=${selected_date.getDate()}&month=${selected_date.getMonth()}&year=${selected_date.getFullYear()}`);
-
-		//new URL(document.location.href + '?day=' + selected_date.getDate())
-
-								  };
-
-	let myCalendar = new VanillaCalendar({
-										    selector: "#myCalendar",
-										    pastDates: 1,
-										    datesFilter: 0,
-										    onSelect: (data, elem) => { send_selected_date(data, elem) },
-										    date: new Date(),
-										    todaysDate: new Date(),
-										    availableWeekDays: [
-      															//{day: 'monday', others: values},
-      					    									],
-										    availableDates: [
-										      					//{date: '2020-07-07', others: values},
-										    				],
-										    months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-										    shortWeekday: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-										})
-
-
-</script>
 
 {% endblock %}
