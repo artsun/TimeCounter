@@ -1,8 +1,9 @@
 
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import uuid4
 from sqlalchemy_utils import UUIDType
+from sqlalchemy.orm import relationship
 
 from .constants import MONTHS
 from . import db
@@ -31,27 +32,33 @@ class Wday(db.Model):
     month = db.Column(db.Integer, default=datetime.now().month)
     year = db.Column(db.Integer, default=datetime.now().year)
     finish = db.Column(db.DateTime)
+    children = relationship("Break", cascade="all,delete", backref="parent")
 
-    def set_finish(self):
+    def _recalc_longitude(self):
+        delta = (self.finish-self.start)
+        self.longitude = (delta.seconds//3600)
+
+    def calc_finish(self):
         total_hours = self.start.hour+self.longitude
         hours = total_hours % 24 if total_hours // 24 else total_hours
         days = (total_hours // 24) + self.start.day
-        self.finish = self.start.replace(hour=hours, day=days)
+        return self.start.replace(hour=hours, day=days)
 
     def delta(self) -> tuple:
-        if self.finish < datetime.now():
-            return 0, 0, 0
-        delta = self.finish - datetime.now()
+        break_ = Break.today(self).filter_by(actual=True).first()
+        diff = break_.start if break_ is not None else datetime.now()
+        delta = (self.finish - diff) if self.finish > diff else timedelta(0, 0)
         return delta.seconds//3600, (delta.seconds//60)%60, delta.seconds%60
 
     @staticmethod
-    def by_user_today(user_pk):
-        return Wday.query.filter_by(user_pk=user_pk, day=datetime.now().day).first()
+    def by_user_today(user):
+        return None if user is None else Wday.query.filter_by(user_pk=user.pk, day=datetime.now().day).first()
 
-    def correct_session(self, db):
+    def correct_finish_with_session(self, db, now=False):
         db.session.add(self)
         db.session.commit()
-        self.set_finish()
+        self.finish = datetime.now() if now else self.calc_finish()
+        self._recalc_longitude() if now else None
         db.session.add(self)
         db.session.commit()
 
@@ -62,9 +69,28 @@ class Wday(db.Model):
         hms.append(MONTHS[self.finish.month])
         return hms
 
+    def add_break_delay(self, break_):
+        self.finish += break_.period()
+        db.session.add(self)
+        db.session.commit()
+
 
 class Break(db.Model):
     pk = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4, unique=True, nullable=False)
     day_pk = db.Column(UUIDType(binary=False), db.ForeignKey('wday.pk'))
     start = db.Column(db.DateTime, default=datetime.now)
-    stop = db.Column(db.DateTime, default=datetime.now)
+    stop = db.Column(db.DateTime)
+    actual = db.Column(db.Boolean)
+
+    @staticmethod
+    def today(day):
+        return Break.query.filter_by(day_pk=day.pk)
+
+    def period(self):
+        return (datetime.now() - self.start) if self.stop is None else (self.stop - self.start)
+
+    def close(self):
+        self.stop = datetime.now()
+        self.actual = False
+        db.session.add(self)
+        db.session.commit()
