@@ -4,7 +4,7 @@ from datetime import datetime
 from uuid import uuid4
 from sqlalchemy_utils import UUIDType
 
-
+from .constants import MONTHS
 from . import db
 
 
@@ -54,6 +54,13 @@ class Wday(db.Model):
         self.set_finish()
         db.session.add(self)
         db.session.commit()
+
+    def finday(self):
+        hms = []
+        for x in (self.finish.hour, self.finish.minute, self.finish.second, self.finish.day):
+            hms.append(str(x)) if x > 9 else hms.append(f'0{x}')
+        hms.append(MONTHS[self.finish.month])
+        return hms
 
 
 class Break(db.Model):
