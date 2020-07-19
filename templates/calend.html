@@ -119,7 +119,7 @@ let myCalendar = new VanillaCalendar({
     <div class="col-3">
         <form method="POST" action="/">
             <div class="input-group">
-                <button class="btn btn-outline-secondary" name="ishold" value="{{ishold}}" >Пауза</button>
+                <button class="btn btn-outline-secondary" name="pause" value="true">{{pause_label}}</button>
             </div>
         </form>
     </div>
@@ -127,21 +127,7 @@ let myCalendar = new VanillaCalendar({
 
 <!--dyn clock-->
 <script type="text/javascript">
-    let was_started = 1;
-    let h = 0; // 0 - 23
-    let m = 0; // 0 - 59
-    let s = 0; // 0 - 59
-    let cuser = '{{cuser}}';
-
-    async function showTime(){
-        if (was_started===1){
-            let response = await fetch(`${document.location.href}?refreshLeftTime=${cuser}`);
-            let resp = await response.json();
-            h = resp['getHours'];
-            m = resp['getMinutes'];
-            s = resp['getSeconds'];
-            was_started = 0;
-        }
+    function calcShowTime(h, m, s){
         if (s > 0){
             s -= 1;
         } else {
@@ -154,6 +140,30 @@ let myCalendar = new VanillaCalendar({
                 h = (h>0) ? h-1: h;
             }
         }
+        return (h, m, s)
+    }
+
+    let was_started = 1;
+    let h = 0; // 0 - 23
+    let m = 0; // 0 - 59
+    let s = 0; // 0 - 59
+    let cuser = '{{cuser}}';
+    let is_pause = {{is_pause}};
+
+    async function showTime(){
+        if (was_started===1){
+            let response = await fetch(`${document.location.href}?refreshLeftTime=${cuser}`);
+            let resp = await response.json();
+            h = resp['getHours'];
+            m = resp['getMinutes'];
+            s = resp['getSeconds'];
+            was_started = 0;
+        }
+
+            h, m, s = calcShowTime(h, m, s);
+
+
+
     h_d = (h < 10) ? "0" + h : h;
     m_d = (m < 10) ? "0" + m : m;
     s_d = (s < 10) ? "0" + s : s;
@@ -162,7 +172,9 @@ let myCalendar = new VanillaCalendar({
     document.getElementById("MyClockDisplay").innerText = time;
     document.getElementById("MyClockDisplay").textContent = time;
 
+    if (is_pause!==1){
     setTimeout(showTime, 1000);
+    }
 }
 showTime();
 </script>
