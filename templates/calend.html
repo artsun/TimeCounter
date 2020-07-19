@@ -2,123 +2,130 @@
 
 
 {% block show %}
-
-  <div class="row">
-      {% if current_user.is_authenticated %}
+<div class="row">
+    {% if current_user.is_authenticated %}
     <div class="col-5">
-      <div id="myCalendar" class="vanilla-calendar"></div>
+        <div id="myCalendar" class="vanilla-calendar"></div>
     </div>
     <div class="col">
         Осталось сегодня
         <div id="MyClockDisplay" class="clock-dyn" onload="showTime()"></div>
         <br>
+        Финиш в {{fhou}}:{{fmin}}:{{fsec}} | дата {{fday}} {{fmon}}
+        <br>
         | Перерывы |
     </div>
-      {%endif%}
+    {%endif%}
 
-      {% if not current_user.is_authenticated %}
-      <div class="col-11">
-          <a>Главная страница, Добро пожаловать!!!</a>
-      </div>
-      {%endif%}
+    {% if not current_user.is_authenticated %}
+    <div class="col-11">
+        <a>Главная страница, Добро пожаловать!!!</a>
+    </div>
+    {%endif%}
 
     <div class="col-1">
-<!--clock start-->
-<div class="clock">
-  <div class="hour">
-    <div class="hr" id="hr">
+    <!--clock start-->
+        <div class="clock">
+            <div class="hour">
+                <div class="hr" id="hr">
+                </div>
+            </div>
+            <div class="min">
+                <div class="mn" id="mn">
+                </div>
+            </div>
+            <div class="sec">
+                <div class="sc" id="sc">
+                </div>
+            </div>
+        </div>
+    <!--clock end-->
     </div>
-  </div>
-  <div class="min">
-    <div class="mn" id="mn">
-    </div>
-  </div>
-  <div class="sec">
-    <div class="sc" id="sc">
-    </div>
-  </div>
 </div>
-<!--clock end-->
-     </div>
-  </div>
 
 <link rel="stylesheet" href="/css/vis_clock.css" />
 <script src="/js/vis_clock.js"></script>
 
-	<!---->
+<!---->
 
-	<link rel="stylesheet" href="/css/vanilla-calendar-min.css">
-	<script src="/js/vanilla-calendar-min.js"></script>
+<link rel="stylesheet" href="/css/vanilla-calendar-min.css">
+<script src="/js/vanilla-calendar-min.js"></script>
 
-	<script type="text/javascript">
-	function send_selected_date(data, elem) {
-		console.log(data);
-		selected_date = new Date(data['date']);
-		console.log(selected_date.getDate(), selected_date.getMonth(), selected_date.getFullYear());
-		console.log(document.location.href);
-		fetch(`${document.location.href}?day=${selected_date.getDate()}&month=${selected_date.getMonth()}&year=${selected_date.getFullYear()}`);
+<script type="text/javascript">
+function send_selected_date(data, elem) {
+	console.log(data);
+	selected_date = new Date(data['date']);
+	console.log(selected_date.getDate(), selected_date.getMonth(), selected_date.getFullYear());
+	console.log(document.location.href);
+	fetch(`${document.location.href}?day=${selected_date.getDate()}&month=${selected_date.getMonth()}&year=${selected_date.getFullYear()}`);
+};
 
-		//new URL(document.location.href + '?day=' + selected_date.getDate())
-
-								  };
-
-	let myCalendar = new VanillaCalendar({
-										    selector: "#myCalendar",
-										    pastDates: 1,
-										    datesFilter: 0,
-										    onSelect: (data, elem) => { send_selected_date(data, elem) },
-										    date: new Date(),
-										    todaysDate: new Date(),
-										    availableWeekDays: [
-      															//{day: 'monday', others: values},
-      					    									],
-										    availableDates: [
-										      					//{date: '2020-07-07', others: values},
-										    				],
-										    months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-										    shortWeekday: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-										})
-
-
+let myCalendar = new VanillaCalendar({
+    selector: "#myCalendar",
+    pastDates: 1,
+    datesFilter: 0,
+    onSelect: (data, elem) => { send_selected_date(data, elem) },
+    date: new Date(),
+    todaysDate: new Date(),
+    availableWeekDays: [
+        //{day: 'monday', others: values},
+    ],
+    availableDates: [
+        //{date: '2020-07-07', others: values},
+    ],
+    months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    shortWeekday: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+})
 </script>
 
- {% endblock %}
+{% endblock %}
 
 {% block control %}
-  <div class="row">
-      <div class="col-3">
-      <form method="POST" action="/">
-      <div class="input-group">
-          <input type="number" class="form-control" id="begind" name="begind" placeholder="часов" min="1" max="16" value="{{begind}}">
-          <button class="btn btn-outline-secondary">Старт</button>
-        </div>
-          </form>
-      </div>
-      <div class="col-3">
-      <form method="POST" action="/">
-      <div class="input-group">
-      <input type="number" class="form-control" id="changed" name="changed" placeholder="часов" min="0" max="16" value="0">
-          <button class="btn btn-outline-secondary">Изменить</button>
-          </div>
-          </form>
-  </div>
-            <div class="col-3">
-      <form method="GET" action="/">
-      <div class="input-group">
-          <button class="btn btn-outline-secondary" name="ishold" value="{{ishold}}" >Пауза</button>
-          </div>
-          </form>
-  </div>
-      <div class="col-3">
-      <form method="GET" action="/">
-      <div class="input-group">
-          <button class="btn btn-outline-secondary" name="finish" value="true">Завершить</button>
-          </div>
-          </form>
-  </div>
-  </div>
+<div class="row">
+    <div class="col-3">
+        <form method="POST" action="/">
+            <div class="input-group">
+                <input type="number" class="form-control" id="begind" name="begind" placeholder="часов" min="1" max="16" value="{{begind}}">
+                <button class="btn btn-outline-secondary">Старт</button>
+            </div>
+        </form>
+    </div>
+    <div class="col-3">
+        <form method="POST" action="/">
+            <div class="input-group">
+                <button class="btn btn-outline-secondary" name="reset" value="true">Сбросить</button>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="row mt-3 mb-3">
+</div>
+<div class="row">
+    <div class="col-3">
+        <form method="POST" action="/">
+            <div class="input-group">
+                <input type="number" class="form-control" id="changed" name="changed" placeholder="часов" min="0" max="16" value="0">
+                <button class="btn btn-outline-secondary">Изменить</button>
+            </div>
+        </form>
+    </div>
+    <div class="col-3">
+        <form method="POST" action="/">
+            <div class="input-group">
+                <button class="btn btn-outline-secondary" name="finish" value="true">Завершить</button>
+            </div>
+        </form>
+    </div>
+    <div class="col-3">
+        <form method="POST" action="/">
+            <div class="input-group">
+                <button class="btn btn-outline-secondary" name="ishold" value="{{ishold}}" >Пауза</button>
+            </div>
+        </form>
+    </div>
+</div>
 
-        <!--dyn clock-->
+<!--dyn clock-->
 <script type="text/javascript">
     let was_started = 1;
     let h = 0; // 0 - 23
@@ -127,7 +134,6 @@
     let cuser = '{{cuser}}';
 
     async function showTime(){
-
         if (was_started===1){
             let response = await fetch(`${document.location.href}?refreshLeftTime=${cuser}`);
             let resp = await response.json();
@@ -157,13 +163,7 @@
     document.getElementById("MyClockDisplay").textContent = time;
 
     setTimeout(showTime, 1000);
-
 }
-
 showTime();
-
 </script>
-
-
-
 {% endblock %}
