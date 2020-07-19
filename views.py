@@ -9,6 +9,7 @@ from .models import User, Wday
 from . import db
 
 
+
 common = Blueprint('common', __name__)
 
 
@@ -23,11 +24,12 @@ def main_page():
         return dict(getHours=h, getMinutes=m, getSeconds=s)
 
     if Wday.by_user_today(User.by_name(name=cuser).pk) is None:
-        begind = 8
+        begind, finday = 8, (' - ', ' - ', ' - ', ' - ', ' - ')
         if request.form.get("begind") is not None:
             begind = int(request.form.get("begind"))
             day = Wday(user_pk=User.by_name(name=cuser).pk, longitude=begind)
             day.correct_session(db)
+            finday = day.finday()
     else:
         day = Wday.by_user_today(User.by_name(name=cuser).pk)
         begind = day.longitude
@@ -36,9 +38,16 @@ def main_page():
             day.longitude = changed
             day.correct_session(db)
             begind = day.longitude
+        finday = day.finday()
+        if request.form.get("reset") is not None:
+            db.session.delete(day)
+            db.session.commit()
+            finday = (' - ', ' - ', ' - ', ' - ', ' - ')
 
 
-    return render_template('calend.html', cuser=cuser, ishold=False, begind=begind)
+
+    return render_template('calend.html', cuser=cuser, ishold=False, begind=begind, fhou=finday[0],
+                           fmin=finday[1], fsec=finday[2], fday=finday[3], fmon=finday[4],)
 
 
 @common.route('/profile')
