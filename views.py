@@ -4,76 +4,92 @@ from flask import request, render_template, redirect, Blueprint, flash, url_for,
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, login_required, current_user, logout_user
 from datetime import datetime
+from collections import namedtuple
 
+from .constants import MONTHS
+from .tools import define_current_user, delta_to_hms
 from .models import User, Wday, Break
 from . import db
 
-
+Verbose_hms = namedtuple('Verbose_hms', ['start', 'stop', 'duration', 'done'])
 
 common = Blueprint('common', __name__)
 
 
-@common.route('/', methods=['POST', 'GET'])
+@common.route('/', methods=['GET'])
 def main_page():
-    is_anon = (current_user.is_active, current_user.is_authenticated, current_user.is_anonymous)
-    cuser = '' if is_anon == (False, False, True) else current_user.name
-    pause_label, is_pause = 'Пауза', 0
+    cuser = User.by_name(name=define_current_user(current_user))
+    day = Wday.by_user_today(cuser) if cuser else None
+    if day is not None:
+        breaks = Break.today(day).filter_by(actual=False)
+        breaks = [] if breaks is None else [Verbose_hms(x.start, x.stop, delta_to_hms(x.stop-x.start), 0) for x in breaks]
+        pause_label, is_pause = ('Продолжить', 1) if Break.today(day).filter_by(actual=True).first() else ('Пауза', 0)
+        show_month = MONTHS[day.finish.month]
+        begind = day.longitude
+        fin = Verbose_hms(day.start, day.finish, delta_to_hms(day.finish-day.start), day.done)
+    else:
+        pause_label, is_pause = 'Пауза', 0
+        begind = 8
+        breaks = []
+        fin = None
+        show_month = ''
 
+    return render_template('calend.html', cuser=cuser, begind=begind, pause_label=pause_label,
+                           is_pause=is_pause, show_month=show_month, fin=fin, breaks=breaks)
+
+
+@common.route('/refreshtimer', methods=['GET'])
+def refresh_timer():
     if request.args.get('refreshLeftTime') is not None:
-        day = Wday.by_user_today(User.by_name(name=cuser))
+        cuser = User.by_name(name=define_current_user(current_user))
+        day = Wday.by_user_today(cuser) if cuser else None
         h, m, s = (0, 0, 0) if day is None else day.delta()
         return dict(getHours=h, getMinutes=m, getSeconds=s)
 
-    if Wday.by_user_today(User.by_name(name=cuser)) is None:
-        begind, finday = 8, (' - ', ' - ', ' - ', ' - ', ' - ')
-        if request.form.get("begind") is not None:
+
+@common.route('/setday', methods=['POST'])
+def set_day():
+    cuser = User.by_name(name=define_current_user(current_user))
+    day = Wday.by_user_today(cuser) if cuser else None
+    if request.form.get("begind") is not None:
+        if cuser and day is None:
             begind = int(request.form.get("begind"))
-            day = Wday(user_pk=User.by_name(name=cuser).pk, longitude=begind)
-            day.correct_finish_with_session(db)
-            finday = day.finday()
-    else:
-        day = Wday.by_user_today(User.by_name(name=cuser))
-        list_breaks = Break.today(day)
-        actual_break = list_breaks.filter_by(actual=True).first()
-        pause_label, is_pause = ('Продолжить', 1) if actual_break else ('Пауза', 0)
-        if request.form.get("changed") is not None:
-            changed = int(request.form.get("changed"))
-            day.longitude = changed
-            day.correct_finish_with_session(db)
-        if request.form.get("finish") is not None:
-            day.correct_finish_with_session(db, now=True)
-        finday = day.finday()
-        begind = day.longitude
-        if request.form.get("reset") is not None:
+            day = Wday(user_pk=cuser.pk, longitude=begind)
+            day.update_session()
+            day.finish = day.calc_finish()
+            day.update_session()
+    if request.form.get("changed") is not None:
+        if day is not None and day.finish > datetime.now():
+            day.longitude = int(request.form.get("changed"))
+            day.update_session()
+            day.finish = day.calc_finish()
+            day.update_session()
+    if request.form.get("finishd") is not None:
+        if day is not None:
+            day.finish = datetime.now()
+            day.done = True
+            day.update_session()
+            day.longitude = day.recalc_longitude()
+            day.update_session()
+    if request.form.get("resetd") is not None:
+        if day is not None:
             db.session.delete(day)
             db.session.commit()
-            finday = (' - ', ' - ', ' - ', ' - ', ' - ')
-        if request.form.get("pause") is not None:
+    if request.form.get("paused") is not None:
+        if day is not None and day.finish > datetime.now():
+            actual_break = Break.today(day).filter_by(actual=True).first()
             if actual_break:  # уже на паузе
                 actual_break.close()
-                day.add_break_delay(actual_break)
-                finday = day.finday()
-                pause_label, is_pause = 'Пауза', 0
             else:
                 db.session.add(Break(day_pk=day.pk, actual=True))
                 db.session.commit()
-                pause_label, is_pause = 'Продолжить', 1
-
-
-    return render_template('calend.html', cuser=cuser, begind=begind, fhou=finday[0], pause_label=pause_label,
-                           is_pause=is_pause, fmin=finday[1], fsec=finday[2], fday=finday[3], fmon=finday[4])
+    return redirect(url_for('common.main_page'))
 
 
 @common.route('/profile')
 @login_required
 def profile_page():
-    if request.method == 'GET':
-        #request.args.get('url')
-        print(request.args)
-    else:
-        res = 'Incorrect request'
-
-    return render_template('profile.html', name=current_user.name)
+    return render_template('profile.html', cuser=current_user)
 
 
 auth = Blueprint('auth', __name__)
