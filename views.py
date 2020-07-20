@@ -22,17 +22,16 @@ def main_page():
     day = Wday.by_user_today(cuser) if cuser else None
     if day is not None:
         breaks = Break.today(day).filter_by(actual=False)
-        breaks = [] if breaks is None else [Verbose_hms(x.start, x.stop, delta_to_hms(x.stop-x.start), 0) for x in breaks]
-        pause_label, is_pause = ('Продолжить', 1) if Break.today(day).filter_by(actual=True).first() else ('Пауза', 0)
+        breaks = [] if breaks is None else [
+            Verbose_hms(x.start, x.stop, f'({delta_to_hms(x.stop-x.start)})', 1) for x in breaks]
+        break_now = Break.today(day).filter_by(actual=True).first()
+        pause_label, is_pause = ('Продолжить', 1) if break_now else ('Пауза', 0)
+        breaks.append(Verbose_hms(break_now.start, ' ... ', '', 0)) if break_now else None
         show_month = MONTHS[day.finish.month]
         begind = day.longitude
         fin = Verbose_hms(day.start, day.finish, delta_to_hms(day.finish-day.start), day.done)
     else:
-        pause_label, is_pause = 'Пауза', 0
-        begind = 8
-        breaks = []
-        fin = None
-        show_month = ''
+        pause_label, is_pause, begind, breaks, fin, show_month = 'Пауза', 0, 8, [], None, ''
 
     return render_template('calend.html', cuser=cuser, begind=begind, pause_label=pause_label,
                            is_pause=is_pause, show_month=show_month, fin=fin, breaks=breaks)
