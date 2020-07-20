@@ -5,7 +5,6 @@ from uuid import uuid4
 from sqlalchemy_utils import UUIDType
 from sqlalchemy.orm import relationship
 
-from .constants import MONTHS
 from . import db
 
 
@@ -32,17 +31,18 @@ class Wday(db.Model):
     month = db.Column(db.Integer, default=datetime.now().month)
     year = db.Column(db.Integer, default=datetime.now().year)
     finish = db.Column(db.DateTime)
-    children = relationship("Break", cascade="all,delete", backref="parent")
+    done = db.Column(db.Boolean, default=False)
+    children = relationship("Break", cascade="all,delete", backref="wday")
 
-    def _recalc_longitude(self):
+    def recalc_longitude(self) -> int:
         delta = (self.finish-self.start)
-        self.longitude = (delta.seconds//3600)
+        return delta.seconds//3600
 
     def calc_finish(self):
-        total_hours = self.start.hour+self.longitude
-        hours = total_hours % 24 if total_hours // 24 else total_hours
-        days = (total_hours // 24) + self.start.day
-        return self.start.replace(hour=hours, day=days)
+        h = self.start.hour + self.longitude
+        days = (h // 24) + self.start.day
+        h = h % 24 if h // 24 else h
+        return self.start.replace(hour=h, day=days)
 
     def delta(self) -> tuple:
         break_ = Break.today(self).filter_by(actual=True).first()
@@ -51,26 +51,10 @@ class Wday(db.Model):
         return delta.seconds//3600, (delta.seconds//60)%60, delta.seconds%60
 
     @staticmethod
-    def by_user_today(user):
+    def by_user_today(user: User):
         return None if user is None else Wday.query.filter_by(user_pk=user.pk, day=datetime.now().day).first()
 
-    def correct_finish_with_session(self, db, now=False):
-        db.session.add(self)
-        db.session.commit()
-        self.finish = datetime.now() if now else self.calc_finish()
-        self._recalc_longitude() if now else None
-        db.session.add(self)
-        db.session.commit()
-
-    def finday(self):
-        hms = []
-        for x in (self.finish.hour, self.finish.minute, self.finish.second, self.finish.day):
-            hms.append(str(x)) if x > 9 else hms.append(f'0{x}')
-        hms.append(MONTHS[self.finish.month])
-        return hms
-
-    def add_break_delay(self, break_):
-        self.finish += break_.period()
+    def update_session(self):
         db.session.add(self)
         db.session.commit()
 
@@ -86,11 +70,15 @@ class Break(db.Model):
     def today(day):
         return Break.query.filter_by(day_pk=day.pk)
 
-    def period(self):
-        return (datetime.now() - self.start) if self.stop is None else (self.stop - self.start)
+    def period(self) -> tuple:
+        delta = self.stop - self.start
+        return delta.seconds//3600, (delta.seconds//60)%60, delta.seconds%60
 
     def close(self):
         self.stop = datetime.now()
+        self.wday.finish += (self.stop - self.start)
+        print('DELTA:', (self.stop - self.start), (self.stop - self.start).seconds)
+        self.wday.update_session()
         self.actual = False
         db.session.add(self)
         db.session.commit()
