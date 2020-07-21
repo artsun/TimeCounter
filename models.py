@@ -42,10 +42,11 @@ class Wday(db.Model):
         h = self.start.hour + self.longitude
         days = (h // 24) + self.start.day
         h = h % 24 if h // 24 else h
-        breaks = Break.today(self).filter_by(actual=False)
-        breaks = sum(((x.stop - x.start) for x in breaks), timedelta()) if breaks else timedelta(0,0)
-        return self.start.replace(hour=h, day=days) + breaks
+        return self.start.replace(hour=h, day=days) + self.calc_breaks()
 
+    def calc_breaks(self) -> timedelta:
+        breaks = Break.today(self).filter_by(actual=False)
+        return sum(((x.stop - x.start) for x in breaks), timedelta()) if breaks else timedelta(0,0)
 
     def delta(self) -> tuple:
         break_ = Break.today(self).filter_by(actual=True).first()
@@ -56,6 +57,10 @@ class Wday(db.Model):
     @staticmethod
     def by_user_today(user: User):
         return None if user is None else Wday.query.filter_by(user_pk=user.pk, day=datetime.now().day).first()
+
+    @staticmethod
+    def by_user_date(user: User, day: int, month: int, year: int):
+        return None if user is None else Wday.query.filter_by(user_pk=user.pk, day=day, month=month, year=year).first()
 
     def update_session(self):
         db.session.add(self)
