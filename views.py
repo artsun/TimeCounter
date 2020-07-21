@@ -10,6 +10,7 @@ from .constants import MONTHS
 from .tools import define_current_user, delta_to_hms
 from .models import User, Wday, Break
 from . import db
+from . import cache
 
 Verbose_hms = namedtuple('Verbose_hms', ['start', 'stop', 'duration', 'done'])
 
@@ -19,8 +20,11 @@ common = Blueprint('common', __name__)
 @common.route('/', methods=['GET'])
 def main_page():
     cuser = User.by_name(name=define_current_user(current_user))
-    day = Wday.by_user_today(cuser) if cuser else None
+    day = Wday.by_user_date(cuser, *request.args.values())\
+        if request.args and len([*request.args.values()]) == 3 else Wday.by_user_today(cuser)
+
     if day is not None:
+        cache.set('day', day.pk)
         breaks = Break.today(day).filter_by(actual=False)
         breaks = [] if breaks is None else [
             Verbose_hms(x.start, x.stop, f'({delta_to_hms(x.stop-x.start)})', 1) for x in breaks]
@@ -30,26 +34,28 @@ def main_page():
         show_month = MONTHS[day.finish.month]
         begind = day.longitude
         fin = Verbose_hms(day.start, day.finish, delta_to_hms(day.finish-day.start), day.done)
+        breaks_sum = day.calc_breaks()
+        breaks_sum = delta_to_hms(breaks_sum) if breaks_sum else ''
     else:
-        pause_label, is_pause, begind, breaks, fin, show_month = 'Пауза', 0, 8, [], None, ''
+        pause_label, is_pause, begind, breaks, fin, show_month, breaks_sum = 'Пауза', 0, 8, [], None, '', ''
 
-    return render_template('calend.html', cuser=cuser, begind=begind, pause_label=pause_label,
+    return render_template('calend.html', cuser=cuser, begind=begind, pause_label=pause_label, breaks_sum=breaks_sum,
                            is_pause=is_pause, show_month=show_month, fin=fin, breaks=breaks)
 
 
 @common.route('/refreshtimer', methods=['GET'])
 def refresh_timer():
     if request.args.get('refreshLeftTime') is not None:
-        cuser = User.by_name(name=define_current_user(current_user))
-        day = Wday.by_user_today(cuser) if cuser else None
+        day = Wday.by_user_today(User.by_name(name=define_current_user(current_user))) if cache.get('day') is None\
+            else Wday.query.filter_by(pk=cache.get('day')).first()
         h, m, s = (0, 0, 0) if day is None else day.delta()
         return dict(getHours=h, getMinutes=m, getSeconds=s)
 
 
-@common.route('/setday', methods=['POST'])
+@common.route('/', methods=['POST'])
 def set_day():
     cuser = User.by_name(name=define_current_user(current_user))
-    day = Wday.by_user_today(cuser) if cuser else None
+    day = Wday.by_user_today(cuser)
     if request.form.get("begind") is not None:
         if cuser and day is None:
             begind = int(request.form.get("begind"))
