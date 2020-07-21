@@ -15,7 +15,7 @@
         Начало {{fin.start.strftime('%H')}}:{{fin.start.strftime('%M')}}:{{fin.start.strftime('%S')}}
         | {{fin.start.day}} {{show_month}}
         <br>
-        Финиш в {{fin.stop.strftime('%H')}}:{{fin.stop.strftime('%M')}}:{{fin.stop.strftime('%S')}}
+        Финиш {{fin.stop.strftime('%H')}}:{{fin.stop.strftime('%M')}}:{{fin.stop.strftime('%S')}}
         | {{fin.stop.day}} {{show_month}}
         {%endif%}
         <br>
@@ -27,15 +27,23 @@
             <tr>
                 <td>{{brk.start.day}} {{show_month}}</td>
                 <td>{{brk.start.strftime('%H')}}:{{brk.start.strftime('%M')}}:{{brk.start.strftime('%S')}} -
+                    {% if brk.done %}
                     {{brk.stop.strftime('%H')}}:{{brk.stop.strftime('%M')}}:{{brk.stop.strftime('%S')}}
-                    ({{brk.duration}})</td>
+                    {{brk.duration}}
+                    {% endif %}
+
+                </td>
             </tr>
         <br>
             {% endfor %}
         {% endif %}
         {% if fin and fin.done%}
         <br>
-        Продолжительность составила: {{fin.duration}}
+            Продолжительность составила: {{fin.duration}}
+            {% if breaks_sum %}
+                <br>
+                при этом, суммарно перерывов на: {{ breaks_sum }}
+            {%endif%}
         {%endif%}
 
 
@@ -77,13 +85,16 @@
 <script src="/js/vanilla-calendar-min.js"></script>
 
 <script type="text/javascript">
-function send_selected_date(data, elem) {
-	console.log(data);
+async function send_selected_date(data, elem) {
 	selected_date = new Date(data['date']);
-	console.log(selected_date.getDate(), selected_date.getMonth(), selected_date.getFullYear());
-	console.log(document.location.href);
-	fetch(`${document.location.href}?day=${selected_date.getDate()}&month=${selected_date.getMonth()}&year=${selected_date.getFullYear()}`);
-};
+    window.location.replace(`?day=${selected_date.getDate()}&month=${selected_date.getMonth()+1}&year=${selected_date.getFullYear()}`);
+}
+let TDD = new Date();
+{% if fin %}
+TDD.setDate({{fin.start.day}});
+TDD.setMonth({{fin.start.month-1}});
+TDD.setYear({{fin.start.year}});
+{% endif %}
 
 let myCalendar = new VanillaCalendar({
     selector: "#myCalendar",
@@ -91,7 +102,7 @@ let myCalendar = new VanillaCalendar({
     datesFilter: 0,
     onSelect: (data, elem) => { send_selected_date(data, elem) },
     date: new Date(),
-    todaysDate: new Date(),
+    todaysDate: TDD,
     availableWeekDays: [
         //{day: 'monday', others: values},
     ],
@@ -100,6 +111,7 @@ let myCalendar = new VanillaCalendar({
     ],
     months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
     shortWeekday: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
 })
 </script>
 
@@ -108,7 +120,7 @@ let myCalendar = new VanillaCalendar({
 {% block control %}
 <div class="row">
     <div class="col-3">
-        <form method="POST" action="/setday">
+        <form method="POST" action="/">
             <div class="input-group">
                 <input type="number" class="form-control" id="begind" name="begind" placeholder="часов" min="1" max="16" value="{{begind}}">
                 <button class="btn btn-outline-secondary">Старт</button>
@@ -116,7 +128,7 @@ let myCalendar = new VanillaCalendar({
         </form>
     </div>
     <div class="col-3">
-        <form method="POST" action="/setday">
+        <form method="POST" action="/">
             <div class="input-group">
                 <button class="btn btn-outline-secondary" name="resetd" value="true">Сбросить</button>
             </div>
@@ -127,7 +139,7 @@ let myCalendar = new VanillaCalendar({
 </div>
 <div class="row">
     <div class="col-3">
-        <form method="POST" action="/setday">
+        <form method="POST" action="/">
             <div class="input-group">
                 <input type="number" class="form-control" id="changed" name="changed" placeholder="часов" min="0" max="16" value="0">
                 <button class="btn btn-outline-secondary">Изменить</button>
@@ -135,14 +147,14 @@ let myCalendar = new VanillaCalendar({
         </form>
     </div>
     <div class="col-3">
-        <form method="POST" action="/setday">
+        <form method="POST" action="/">
             <div class="input-group">
                 <button class="btn btn-outline-secondary" name="finishd" value="true">Завершить</button>
             </div>
         </form>
     </div>
     <div class="col-3">
-        <form method="POST" action="/setday">
+        <form method="POST" action="/">
             <div class="input-group">
                 <button class="btn btn-outline-secondary" name="paused" value="true">{{pause_label}}</button>
             </div>
@@ -172,12 +184,11 @@ let myCalendar = new VanillaCalendar({
     let h = 0; // 0 - 23
     let m = 0; // 0 - 59
     let s = 0; // 0 - 59
-    let cuser = '{{cuser.name}}';
     let is_pause = {{is_pause}};
 
     async function showTime(){
         if (was_started===1){
-            let response = await fetch(`${document.location.href}/refreshtimer?refreshLeftTime=${cuser}`);
+            let response = await fetch(`/refreshtimer?refreshLeftTime=true`);
             let resp = await response.json();
             h = resp['getHours'];
             m = resp['getMinutes'];
