@@ -16,6 +16,15 @@ Verbose_hms = namedtuple('Verbose_hms', ['start', 'stop', 'duration', 'done'])
 
 common = Blueprint('common', __name__)
 
+@common.route('/istrue', methods=['GET'])
+def istrue():
+    day = Wday.by_user_today(User.by_name(name=define_current_user(current_user))) if cache.get('day') is None \
+        else Wday.query.filter_by(pk=cache.get('day')).first()
+    br = Break.today(day).filter_by(actual=True).first()
+    print(br)
+    return {'res': 0} if br is None else {'res': 1}
+
+
 
 @common.route('/', methods=['GET'])
 def main_page():
@@ -52,6 +61,22 @@ def refresh_timer():
         return dict(getHours=h, getMinutes=m, getSeconds=s)
 
 
+@common.route('/setday', methods=['GET'])
+def setday():
+    cuser = User.by_name(name=define_current_user(current_user))
+    day = Wday.by_user_today(cuser)
+    if request.args.get("paused") is not None:
+        print('PAUSE')
+        if day is not None and day.finish > datetime.now():
+            actual_break = Break.today(day).filter_by(actual=True).first()
+            if actual_break:  # уже на паузе
+                actual_break.close()
+            else:
+                db.session.add(Break(day_pk=day.pk, actual=True))
+                db.session.commit()
+    return redirect(url_for('common.main_page'))
+
+
 @common.route('/', methods=['POST'])
 def set_day():
     cuser = User.by_name(name=define_current_user(current_user))
@@ -80,14 +105,6 @@ def set_day():
         if day is not None:
             db.session.delete(day)
             db.session.commit()
-    if request.form.get("paused") is not None:
-        if day is not None and day.finish > datetime.now():
-            actual_break = Break.today(day).filter_by(actual=True).first()
-            if actual_break:  # уже на паузе
-                actual_break.close()
-            else:
-                db.session.add(Break(day_pk=day.pk, actual=True))
-                db.session.commit()
     return redirect(url_for('common.main_page'))
 
 
