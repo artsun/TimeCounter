@@ -11,12 +11,12 @@
         Осталось сегодня
         <div id="MyClockDisplay" class="clock-dyn" onload="checkPause()"></div>
         <br>
-        {% if fin %}
-        Начало {{fin.start.strftime('%H')}}:{{fin.start.strftime('%M')}}:{{fin.start.strftime('%S')}}
-        | {{fin.start.day}} {{show_month}}
+        {% if today %}
+        Начало {{today.start.strftime('%H')}}:{{today.start.strftime('%M')}}:{{today.start.strftime('%S')}}
+        | {{today.start.day}} {{show_month}}
         <br>
-        Финиш {{fin.stop.strftime('%H')}}:{{fin.stop.strftime('%M')}}:{{fin.stop.strftime('%S')}}
-        | {{fin.stop.day}} {{show_month}}
+        Финиш {{today.stop.strftime('%H')}}:{{today.stop.strftime('%M')}}:{{today.stop.strftime('%S')}}
+        | {{today.stop.day}} {{show_month}}
         {%endif%}
         <br>
         <br>
@@ -37,9 +37,9 @@
         <br>
             {% endfor %}
         {% endif %}
-        {% if fin and fin.done%}
+        {% if today and today.done%}
         <br>
-            Продолжительность составила: {{fin.duration}}
+            Продолжительность составила: {{today.duration}}
             {% if breaks_sum %}
                 <br>
                 при этом, суммарно перерывов на: {{ breaks_sum }}
@@ -88,11 +88,11 @@
 
 <script type="text/javascript">
 
-let TDD = new Date();
-{% if fin %}
-TDD.setDate({{fin.start.day}});
-TDD.setMonth({{fin.start.month-1}});
-TDD.setYear({{fin.start.year}});
+let DateToShow = new Date();
+{% if today %}
+DateToShow.setDate({{today.start.day}});
+DateToShow.setMonth({{today.start.month-1}});
+DateToShow.setYear({{today.start.year}});
 {% endif %}
 
 let myCalendar = new VanillaCalendar({
@@ -101,7 +101,7 @@ let myCalendar = new VanillaCalendar({
     datesFilter: 0,
     onSelect: (data, elem) => { send_selected_date(data, elem) },
     date: new Date(),
-    todaysDate: TDD,
+    todaysDate: DateToShow,
     availableWeekDays: [
         //{day: 'monday', others: values},
     ],
@@ -148,14 +148,14 @@ let myCalendar = new VanillaCalendar({
     <div class="col-3">
         <form method="POST" action="/">
             <div class="input-group">
-                <button class="btn btn-outline-secondary" name="finishd" value="true">Завершить</button>
+                <button class="btn btn-outline-secondary" id="finishd" name="finishd" value="{{today.done}}">Завершить</button>
             </div>
         </form>
     </div>
     <div class="col-3">
-            <div class="input-group">
-                <button class="btn btn-outline-secondary" id="paused" name="paused" value="0" onclick="clickPause(value)">Пауза</button>
-            </div>
+        <div class="input-group">
+            <button class="btn btn-outline-secondary" id="paused" name="paused" value="{{is_pause}}" onclick="clickPause(value)">{{pause_label}}</button>
+        </div>
     </div>
 </div>
 
@@ -164,23 +164,21 @@ let myCalendar = new VanillaCalendar({
 <!--dyn clock-->
 <script type="text/javascript">
 
-    window.onload=function(){
-    fetch(`/istrue`).then(resp => resp.text()).then(resp => defPause(resp));
-
-  };
-
+    function checkFinished(){
+       let finishd = document.getElementById("finishd");
+       return (finishd.value === "True" || ("{{today != None}}" !== "True")) ? 1: 0;
+    }
 
     function clickPause(v) {
+        if (checkFinished()){
+            return
+        }
     let button = document.getElementById("paused");
     if (v === "1") {button.value = "0"; button.innerText="Пауза"} else {button.value = "1"; button.innerText="Продолжить"}
-    fetch(`/setday?paused=1`);//.then(resp => resp.json()).then(resp => resp['res']).then(resp => defPause(resp));
+    fetch(`/setday?paused=1`);
 
 }
-function defPause(resp) {
-        console.log(resp);
-        let button = document.getElementById("paused");
-        if (resp === '0') {button.value = "0"; button.innerText="Пауза"} else {button.value = "1"; button.innerText="Продолжить"}
-}
+
 
     function calcShowTime(h, m, s){
         if (s > 0){
@@ -205,7 +203,7 @@ function defPause(resp) {
 
 
 
-async function showTime(notshow){
+async function showTime(){
     if (was_started===1){
             let response = await fetch(`/refreshtimer?refreshLeftTime=true`);
             let resp = await response.json();
@@ -218,10 +216,6 @@ async function showTime(notshow){
     if (is_pause.value ==="0"){
         h, m, s = calcShowTime(h, m, s);
     }
-
-
-
-
 
 
     h_d = (h < 10) ? "0" + h : h;
