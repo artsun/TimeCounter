@@ -9,7 +9,7 @@
     </div>
     <div class="col">
         Осталось сегодня
-        <div id="MyClockDisplay" class="clock-dyn" onload="showTime()"></div>
+        <div id="MyClockDisplay" class="clock-dyn" onload="checkPause()"></div>
         <br>
         {% if fin %}
         Начало {{fin.start.strftime('%H')}}:{{fin.start.strftime('%M')}}:{{fin.start.strftime('%S')}}
@@ -81,14 +81,13 @@
 
 <!---->
 
-<link rel="stylesheet" href="/css/vanilla-calendar-min.css">
-<script src="/js/vanilla-calendar-min.js"></script>
+<link rel="stylesheet" href="/css/vanilla-calendar.css">
+<script src="/js/vanilla-calendar.js"></script>
+
+<script src="/js/event-handlers.js"></script>
 
 <script type="text/javascript">
-async function send_selected_date(data, elem) {
-	selected_date = new Date(data['date']);
-    window.location.replace(`?day=${selected_date.getDate()}&month=${selected_date.getMonth()+1}&year=${selected_date.getFullYear()}`);
-}
+
 let TDD = new Date();
 {% if fin %}
 TDD.setDate({{fin.start.day}});
@@ -154,16 +153,35 @@ let myCalendar = new VanillaCalendar({
         </form>
     </div>
     <div class="col-3">
-        <form method="POST" action="/">
             <div class="input-group">
-                <button class="btn btn-outline-secondary" name="paused" value="true">{{pause_label}}</button>
+                <button class="btn btn-outline-secondary" id="paused" name="paused" value="0" onclick="clickPause(value)">Пауза</button>
             </div>
-        </form>
     </div>
 </div>
 
+
+
 <!--dyn clock-->
 <script type="text/javascript">
+
+    window.onload=function(){
+    fetch(`/istrue`).then(resp => resp.text()).then(resp => defPause(resp));
+
+  };
+
+
+    function clickPause(v) {
+    let button = document.getElementById("paused");
+    if (v === "1") {button.value = "0"; button.innerText="Пауза"} else {button.value = "1"; button.innerText="Продолжить"}
+    fetch(`/setday?paused=1`);//.then(resp => resp.json()).then(resp => resp['res']).then(resp => defPause(resp));
+
+}
+function defPause(resp) {
+        console.log(resp);
+        let button = document.getElementById("paused");
+        if (resp === '0') {button.value = "0"; button.innerText="Пауза"} else {button.value = "1"; button.innerText="Продолжить"}
+}
+
     function calcShowTime(h, m, s){
         if (s > 0){
             s -= 1;
@@ -184,10 +202,11 @@ let myCalendar = new VanillaCalendar({
     let h = 0; // 0 - 23
     let m = 0; // 0 - 59
     let s = 0; // 0 - 59
-    let is_pause = {{is_pause}};
 
-    async function showTime(){
-        if (was_started===1){
+
+
+async function showTime(notshow){
+    if (was_started===1){
             let response = await fetch(`/refreshtimer?refreshLeftTime=true`);
             let resp = await response.json();
             h = resp['getHours'];
@@ -195,8 +214,14 @@ let myCalendar = new VanillaCalendar({
             s = resp['getSeconds'];
             was_started = 0;
         }
+        let is_pause = document.getElementById("paused");
+    if (is_pause.value ==="0"){
+        h, m, s = calcShowTime(h, m, s);
+    }
 
-            h, m, s = calcShowTime(h, m, s);
+
+
+
 
 
     h_d = (h < 10) ? "0" + h : h;
@@ -207,9 +232,9 @@ let myCalendar = new VanillaCalendar({
     document.getElementById("MyClockDisplay").innerText = time;
     document.getElementById("MyClockDisplay").textContent = time;
 
-    if (is_pause!==1){
+
     setTimeout(showTime, 1000);
-    }
+
 }
 
 showTime();
