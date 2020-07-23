@@ -39,14 +39,14 @@ def main_page():
         breaks.append(Verbose_hms(break_now.start, ' ... ', '', 0)) if break_now else None
         show_month = MONTHS[day.finish.month]
         begind = day.longitude
-        fin = Verbose_hms(day.start, day.finish, delta_to_hms(day.finish-day.start), day.done)
+        today = Verbose_hms(day.start, day.finish, delta_to_hms(day.finish-day.start), day.done)
         breaks_sum = day.calc_breaks()
         breaks_sum = delta_to_hms(breaks_sum) if breaks_sum else ''
     else:
-        pause_label, is_pause, begind, breaks, fin, show_month, breaks_sum = 'Пауза', 0, 8, [], None, '', ''
+        pause_label, is_pause, begind, breaks, today, show_month, breaks_sum = 'Пауза', 0, 8, [], None, '', ''
 
     return render_template('calend.html', cuser=cuser, begind=begind, pause_label=pause_label, breaks_sum=breaks_sum,
-                           is_pause=is_pause, show_month=show_month, fin=fin, breaks=breaks)
+                           is_pause=is_pause, show_month=show_month, today=today, breaks=breaks)
 
 
 @common.route('/refreshtimer', methods=['GET'])
