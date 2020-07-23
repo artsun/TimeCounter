@@ -7,7 +7,7 @@ from datetime import datetime
 from collections import namedtuple
 
 from .constants import MONTHS
-from .tools import define_current_user, delta_to_hms
+from .tools import delta_to_hms
 from .models import User, Wday, Break
 from . import db
 from . import cache
@@ -18,19 +18,16 @@ common = Blueprint('common', __name__)
 
 @common.route('/istrue', methods=['GET'])
 def istrue():
-    day = Wday.by_user_today(User.by_name(name=define_current_user(current_user))) if cache.get('day') is None \
-        else Wday.query.filter_by(pk=cache.get('day')).first()
+    cuser = User.check_anon(current_user)
+    day = cuser.day() if cache.get('day') is None else Wday.query.filter_by(pk=cache.get('day')).first()
     br = Break.today(day).filter_by(actual=True).first()
-    print(br)
-    return {'res': 0} if br is None else {'res': 1}
-
+    return '0' if br is None else '1'
 
 
 @common.route('/', methods=['GET'])
 def main_page():
-    cuser = User.by_name(name=define_current_user(current_user))
-    day = Wday.by_user_date(cuser, *request.args.values())\
-        if request.args and len([*request.args.values()]) == 3 else Wday.by_user_today(cuser)
+    cuser = User.check_anon(current_user)
+    day = cuser.day(tuple(request.args.values())) if request.args else cuser.day()
 
     if day is not None:
         cache.set('day', day.pk)
@@ -55,7 +52,7 @@ def main_page():
 @common.route('/refreshtimer', methods=['GET'])
 def refresh_timer():
     if request.args.get('refreshLeftTime') is not None:
-        day = Wday.by_user_today(User.by_name(name=define_current_user(current_user))) if cache.get('day') is None\
+        day = Wday.by_user_today(User.check_anon(current_user)) if cache.get('day') is None\
             else Wday.query.filter_by(pk=cache.get('day')).first()
         h, m, s = (0, 0, 0) if day is None else day.delta()
         return dict(getHours=h, getMinutes=m, getSeconds=s)
@@ -63,7 +60,7 @@ def refresh_timer():
 
 @common.route('/setday', methods=['GET'])
 def setday():
-    cuser = User.by_name(name=define_current_user(current_user))
+    cuser = User.check_anon(current_user)
     day = Wday.by_user_today(cuser)
     if request.args.get("paused") is not None:
         print('PAUSE')
@@ -79,7 +76,7 @@ def setday():
 
 @common.route('/', methods=['POST'])
 def set_day():
-    cuser = User.by_name(name=define_current_user(current_user))
+    cuser = User.check_anon(current_user)
     day = Wday.by_user_today(cuser)
     if request.form.get("begind") is not None:
         if cuser and day is None:
