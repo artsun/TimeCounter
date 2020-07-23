@@ -4,8 +4,12 @@ from datetime import datetime, timedelta
 from uuid import uuid4
 from sqlalchemy_utils import UUIDType
 from sqlalchemy.orm import relationship
+from collections import namedtuple
+from flask_login import current_user
 
 from . import db
+
+Summary = namedtuple('Summary', ['user', 'day', 'breaks'])
 
 
 class User(UserMixin, db.Model):
@@ -13,13 +17,26 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(100))
     password = db.Column(db.String(100))
     name = db.Column(db.String(1000), unique=True)
+    days = relationship("Wday", cascade="all,delete", backref="user")
 
     def get_id(self):
         return self.pk
 
+    def day(self, dmy: tuple = None):
+        dmy = (f'{datetime.now().day}', f'{datetime.now().month}', f'{datetime.now().year}') if dmy is None else dmy
+        day = [day for day in self.days if (f'{day.day}', f'{day.month}', f'{day.year}') == dmy]
+        return day[0] if len(day) == 1 else None
+
     @staticmethod
-    def by_name(name):
-        return User.query.filter_by(name=name).first()
+    def check_anon(current_user: current_user) -> current_user:
+        is_anon = (current_user.is_active, current_user.is_authenticated, current_user.is_anonymous)
+        return User() if is_anon == (False, False, True) else current_user
+
+    @staticmethod
+    def generate(current_user: current_user, dmy: tuple = None) -> Summary or None:
+        user = User.check_anon(current_user)
+        #day = Wday.by_user_today(user) if dmy is None else Wday
+        #Summary(user, ,)
 
 
 class Wday(db.Model):
@@ -32,7 +49,7 @@ class Wday(db.Model):
     year = db.Column(db.Integer, default=datetime.now().year)
     finish = db.Column(db.DateTime)
     done = db.Column(db.Boolean, default=False)
-    children = relationship("Break", cascade="all,delete", backref="wday")
+    breaks = relationship("Break", cascade="all,delete", backref="wday")
 
     def recalc_longitude(self) -> int:
         delta = (self.finish-self.start)
@@ -76,7 +93,7 @@ class Break(db.Model):
 
     @staticmethod
     def today(day):
-        return Break.query.filter_by(day_pk=day.pk)
+        return Break.query.filter_by(day_pk=day.pk) if day is not None else None
 
     def period(self) -> tuple:
         delta = self.stop - self.start
