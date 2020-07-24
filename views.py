@@ -19,7 +19,7 @@ common = Blueprint('common', __name__)
 @common.route('/istrue', methods=['GET'])
 def istrue():
     cuser = User.check_anon(current_user)
-    day = cuser.day() if cache.get('day') is None else Wday.query.filter_by(pk=cache.get('day')).first()
+    day = cuser.day() if cache.get(cuser.pk) is None else Wday.query.filter_by(pk=cache.get('day')).first()
     br = Break.today(day).filter_by(actual=True).first()
     return '0' if br is None else '1'
 
@@ -30,7 +30,7 @@ def main_page():
     day = cuser.day(tuple(request.args.values())) if request.args else cuser.day()
 
     if day is not None:
-        cache.set('day', day.pk)
+        cache.set(cuser.pk, day.pk)
         breaks = Break.today(day).filter_by(actual=False)
         breaks = [] if breaks is None else [
             Verbose_hms(x.start, x.stop, f'({delta_to_hms(x.stop-x.start)})', 1) for x in breaks]
@@ -51,11 +51,21 @@ def main_page():
 
 @common.route('/refreshtimer', methods=['GET'])
 def refresh_timer():
-    if request.args.get('refreshLeftTime') is not None:
-        day = Wday.by_user_today(User.check_anon(current_user)) if cache.get('day') is None\
-            else Wday.query.filter_by(pk=cache.get('day')).first()
+    if request.args.get('do') is not None:
+        cuser = User.check_anon(current_user)
+        day = cuser.day() if cache.get(cuser.pk) is None else Wday.query.filter_by(pk=cache.get(cuser.pk)).first()
         h, m, s = (0, 0, 0) if day is None else day.delta()
         return dict(getHours=h, getMinutes=m, getSeconds=s)
+
+
+@common.route('/refreshbreaks', methods=['GET'])
+def refresh_breaks():
+    if request.args.get('refreshLeftTime') is not None:
+        cuser = User.check_anon(current_user)
+        day = cuser.day() if cache.get(cuser.pk) is None else Wday.query.filter_by(pk=cache.get(cuser.pk)).first()
+        h, m, s = (0, 0, 0) if day is None else day.delta()
+        return dict(getHours=h, getMinutes=m, getSeconds=s)
+
 
 
 @common.route('/setday', methods=['GET'])
