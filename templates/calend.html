@@ -203,9 +203,10 @@ let myCalendar = new VanillaCalendar({
 
 
 
+
 async function showTime(){
     if (was_started===1){
-            let response = await fetch(`/refreshtimer?refreshLeftTime=true`);
+            let response = await fetch(`/refreshtimer?do=true`);
             let resp = await response.json();
             h = resp['getHours'];
             m = resp['getMinutes'];
@@ -218,14 +219,7 @@ async function showTime(){
     }
 
 
-    h_d = (h < 10) ? "0" + h : h;
-    m_d = (m < 10) ? "0" + m : m;
-    s_d = (s < 10) ? "0" + s : s;
-
-    let time = h_d + ":" + m_d + ":" + s_d;
-    document.getElementById("MyClockDisplay").innerText = time;
-    document.getElementById("MyClockDisplay").textContent = time;
-
+    setTime(h, m, s);
 
     setTimeout(showTime, 1000);
 
