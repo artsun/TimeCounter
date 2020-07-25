@@ -10,7 +10,16 @@ window.setTime = function (h, m, s){
     m_d = (m < 10) ? "0" + m : m;
     s_d = (s < 10) ? "0" + s : s;
 
-    let time = h_d + ":" + m_d + ":" + s_d;
-    document.getElementById("MyClockDisplay").innerText = time;
-    document.getElementById("MyClockDisplay").textContent = time;
+    return h_d + ":" + m_d + ":" + s_d
+};
+
+window.refreshBreaks = function(){
+    document.getElementById("Breaks").innerHTML ='';
+    fetch(`/refreshbreaks?do=true`).then(response => response.json()).then(res => {for (let br of res['breaks']) document.getElementById("Breaks").innerHTML += `<td>${br}</td><br>`});
+};
+
+
+window.setPauseLabel = function(){
+    let pButt = document.getElementById("paused");
+    pButt.innerText = (pButt.value === "0") ? "Пауза" : "Продолжить";
 };
