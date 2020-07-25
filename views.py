@@ -12,7 +12,7 @@ from .models import User, Wday, Break
 from . import db
 from . import cache
 
-Verbose_hms = namedtuple('Verbose_hms', ['start', 'stop', 'duration', 'done'])
+HMS = namedtuple('HMS', ['start', 'stop', 'duration', 'done'])
 
 common = Blueprint('common', __name__)
 
@@ -30,41 +30,39 @@ def main_page():
     day = cuser.day(tuple(request.args.values())) if request.args else cuser.day()
 
     if day is not None:
+        print(Wday().get_breaks())
         cache.set(cuser.pk, day.pk)
-        breaks = Break.today(day).filter_by(actual=False)
-        breaks = [] if breaks is None else [
-            Verbose_hms(x.start, x.stop, f'({delta_to_hms(x.stop-x.start)})', 1) for x in breaks]
+
         break_now = Break.today(day).filter_by(actual=True).first()
         pause_label, is_pause = ('Продолжить', 1) if break_now else ('Пауза', 0)
-        breaks.append(Verbose_hms(break_now.start, ' ... ', '', 0)) if break_now else None
         show_month = MONTHS[day.finish.month]
         begind = day.longitude
-        today = Verbose_hms(day.start, day.finish, delta_to_hms(day.finish-day.start), day.done)
+        today = HMS(day.start, day.finish, delta_to_hms(day.finish-day.start), day.done)
         breaks_sum = day.calc_breaks()
         breaks_sum = delta_to_hms(breaks_sum) if breaks_sum else ''
     else:
-        pause_label, is_pause, begind, breaks, today, show_month, breaks_sum = 'Пауза', 0, 8, [], None, '', ''
+        pause_label, is_pause, begind, today, show_month, breaks_sum = 'Пауза', 0, 8, None, '', ''
 
     return render_template('calend.html', cuser=cuser, begind=begind, pause_label=pause_label, breaks_sum=breaks_sum,
-                           is_pause=is_pause, show_month=show_month, today=today, breaks=breaks)
+                           is_pause=is_pause, show_month=show_month, today=today)
 
 
 @common.route('/refreshtimer', methods=['GET'])
 def refresh_timer():
     if request.args.get('do') is not None:
         cuser = User.check_anon(current_user)
-        day = cuser.day() if cache.get(cuser.pk) is None else Wday.query.filter_by(pk=cache.get(cuser.pk)).first()
-        h, m, s = (0, 0, 0) if day is None else day.delta()
-        return dict(getHours=h, getMinutes=m, getSeconds=s)
+        day = cuser.day() if cache.get(cuser.pk) is None else Wday.by_pk(cache.get(cuser.pk))
+        return day.left()
 
 
 @common.route('/refreshbreaks', methods=['GET'])
 def refresh_breaks():
-    if request.args.get('refreshLeftTime') is not None:
+    if request.args.get('do') is not None:
         cuser = User.check_anon(current_user)
-        day = cuser.day() if cache.get(cuser.pk) is None else Wday.query.filter_by(pk=cache.get(cuser.pk)).first()
-        h, m, s = (0, 0, 0) if day is None else day.delta()
-        return dict(getHours=h, getMinutes=m, getSeconds=s)
+        day = cuser.day() if cache.get(cuser.pk) is None else Wday.by_pk(cache.get(cuser.pk))
+        res = day.breaks_strings()
+        #print(res)
+        return dict(breaks=res)
 
 
 
@@ -81,7 +79,7 @@ def setday():
             else:
                 db.session.add(Break(day_pk=day.pk, actual=True))
                 db.session.commit()
-    return redirect(url_for('common.main_page'))
+        return dict(done='ok')
 
 
 @common.route('/', methods=['POST'])
