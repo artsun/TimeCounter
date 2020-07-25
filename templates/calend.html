@@ -20,23 +20,7 @@
         {%endif%}
         <br>
         <br>
-        {% if breaks %}
-        Перерывы:
-        <br>
-            {% for brk in breaks %}
-            <tr>
-                <td>{{brk.start.day}} {{show_month}}</td>
-                <td>{{brk.start.strftime('%H')}}:{{brk.start.strftime('%M')}}:{{brk.start.strftime('%S')}} -
-                    {% if brk.done %}
-                    {{brk.stop.strftime('%H')}}:{{brk.stop.strftime('%M')}}:{{brk.stop.strftime('%S')}}
-                    {{brk.duration}}
-                    {% endif %}
-
-                </td>
-            </tr>
-        <br>
-            {% endfor %}
-        {% endif %}
+        <div id="Breaks"></div>
         {% if today and today.done%}
         <br>
             Продолжительность составила: {{today.duration}}
@@ -87,6 +71,9 @@
 <script src="/js/event-handlers.js"></script>
 
 <script type="text/javascript">
+
+
+
 
 let DateToShow = new Date();
 {% if today %}
@@ -173,10 +160,10 @@ let myCalendar = new VanillaCalendar({
         if (checkFinished()){
             return
         }
-    let button = document.getElementById("paused");
-    if (v === "1") {button.value = "0"; button.innerText="Пауза"} else {button.value = "1"; button.innerText="Продолжить"}
-    fetch(`/setday?paused=1`);
-
+    let pButt = document.getElementById("paused");
+    pButt.value = (v === "1") ? "0" : "1";
+    setPauseLabel();
+    fetch(`/setday?paused=1`).then(res => refreshBreaks());
 }
 
 
@@ -219,12 +206,17 @@ async function showTime(){
     }
 
 
-    setTime(h, m, s);
+    let time = setTime(h, m, s);
+
+    document.getElementById("MyClockDisplay").innerText = time;
+    document.getElementById("MyClockDisplay").textContent = time;
 
     setTimeout(showTime, 1000);
 
 }
 
 showTime();
+window.onload = refreshBreaks();
+window.onload = setPauseLabel();
 </script>
 {% endblock %}
