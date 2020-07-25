@@ -8,6 +8,7 @@ from collections import namedtuple
 from flask_login import current_user
 
 from . import db
+from .constants import MONTHS
 
 Summary = namedtuple('Summary', ['user', 'day', 'breaks'])
 
@@ -65,11 +66,27 @@ class Wday(db.Model):
         breaks = Break.today(self).filter_by(actual=False)
         return sum(((x.stop - x.start) for x in breaks), timedelta()) if breaks else timedelta(0,0)
 
-    def delta(self) -> tuple:
+    def get_breaks(self):
+        nonact, act = self.breaks.copy(), []
+        [act.append(nonact.pop(n)) for n, br in enumerate(nonact) if br.actual]
+        return nonact, act
+
+    def breaks_strings(self):
+        nonact, act = self.get_breaks()
+        fmt = ('%H', '%M', '%S')
+        breaks = [f'{el.wday.day} {MONTHS[el.wday.month]} ' + ':'.join([f"{el.start.strftime(fm)}" for fm in fmt]) +
+                  ' - ' + ':'.join([f"{el.stop.strftime(fm)}" for fm in fmt]) + " ({} ч. {} мин. {} сек.)". \
+                      format(*el.period()) for el in nonact]
+        breaks += [
+            f'{el.wday.day} {MONTHS[el.wday.month]} ' + ':'.join([f"{el.start.strftime(fm)}" for fm in fmt]) + ' -' for
+            el in act]
+        return breaks
+
+    def left(self) -> dict:
         break_ = Break.today(self).filter_by(actual=True).first()
         diff = break_.start if break_ is not None else datetime.now()
-        delta = (self.finish - diff) if self.finish > diff else timedelta(0, 0)
-        return delta.seconds//3600, (delta.seconds//60)%60, delta.seconds%60
+        left = (self.finish - diff) if self.finish and self.finish > diff else timedelta(0, 0)
+        return dict(getHours=left.seconds//3600, getMinutes=(left.seconds//60)%60, getSeconds=left.seconds%60)
 
     @staticmethod
     def by_user_today(user: User):
@@ -78,6 +95,11 @@ class Wday(db.Model):
     @staticmethod
     def by_user_date(user: User, day: int, month: int, year: int):
         return None if user is None else Wday.query.filter_by(user_pk=user.pk, day=day, month=month, year=year).first()
+
+    @staticmethod
+    def by_pk(pk):
+        day = Wday.query.filter_by(pk=pk).first()
+        return Wday() if day is None else day
 
     def update_session(self):
         db.session.add(self)
