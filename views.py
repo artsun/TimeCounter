@@ -34,16 +34,16 @@ def main_page():
         cache.set(cuser.pk, day.pk)
 
         break_now = Break.today(day).filter_by(actual=True).first()
-        pause_label, is_pause = ('Продолжить', 1) if break_now else ('Пауза', 0)
+        is_pause = 1 if break_now else 0
         show_month = MONTHS[day.finish.month]
         begind = day.longitude
         today = HMS(day.start, day.finish, delta_to_hms(day.finish-day.start), day.done)
         breaks_sum = day.calc_breaks()
         breaks_sum = delta_to_hms(breaks_sum) if breaks_sum else ''
     else:
-        pause_label, is_pause, begind, today, show_month, breaks_sum = 'Пауза', 0, 8, None, '', ''
+        is_pause, begind, today, show_month, breaks_sum = 0, 8, None, '', ''
 
-    return render_template('calend.html', cuser=cuser, begind=begind, pause_label=pause_label, breaks_sum=breaks_sum,
+    return render_template('calend.html', cuser=cuser, begind=begind, breaks_sum=breaks_sum,
                            is_pause=is_pause, show_month=show_month, today=today)
 
 
@@ -61,9 +61,7 @@ def refresh_breaks():
         cuser = User.check_anon(current_user)
         day = cuser.day() if cache.get(cuser.pk) is None else Wday.by_pk(cache.get(cuser.pk))
         res = day.breaks_strings()
-        #print(res)
         return dict(breaks=res)
-
 
 
 @common.route('/setday', methods=['GET'])
@@ -71,7 +69,6 @@ def setday():
     cuser = User.check_anon(current_user)
     day = Wday.by_user_today(cuser)
     if request.args.get("paused") is not None:
-        print('PAUSE')
         if day is not None and day.finish > datetime.now():
             actual_break = Break.today(day).filter_by(actual=True).first()
             if actual_break:  # уже на паузе
