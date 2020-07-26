@@ -1,4 +1,4 @@
 # TimeCounter
 
-Clock - https://github.com/tusharnankani/AnalogClock
+Clock - https://codepen.io/dope/pen/KJYMZz
 Calendar - https://github.com/marssola/vanilla-calendar
