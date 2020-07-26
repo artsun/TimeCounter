@@ -10,8 +10,6 @@ from flask_login import current_user
 from . import db
 from .constants import MONTHS
 
-Summary = namedtuple('Summary', ['user', 'day', 'breaks'])
-
 
 class User(UserMixin, db.Model):
     pk = db.Column(UUIDType(binary=False), primary_key=True, default=uuid4, unique=True, nullable=False)
@@ -32,12 +30,6 @@ class User(UserMixin, db.Model):
     def check_anon(current_user: current_user) -> current_user:
         is_anon = (current_user.is_active, current_user.is_authenticated, current_user.is_anonymous)
         return User() if is_anon == (False, False, True) else current_user
-
-    @staticmethod
-    def generate(current_user: current_user, dmy: tuple = None) -> Summary or None:
-        user = User.check_anon(current_user)
-        #day = Wday.by_user_today(user) if dmy is None else Wday
-        #Summary(user, ,)
 
 
 class Wday(db.Model):
@@ -91,10 +83,6 @@ class Wday(db.Model):
     @staticmethod
     def by_user_today(user: User):
         return None if user is None else Wday.query.filter_by(user_pk=user.pk, day=datetime.now().day).first()
-
-    @staticmethod
-    def by_user_date(user: User, day: int, month: int, year: int):
-        return None if user is None else Wday.query.filter_by(user_pk=user.pk, day=day, month=month, year=year).first()
 
     @staticmethod
     def by_pk(pk):
