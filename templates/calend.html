@@ -3,11 +3,11 @@
 
 {% block show %}
 <div class="row">
-    {% if current_user.is_authenticated %}
-    <div class="col-5">
+
+    <div class="col-4">
         <div id="myCalendar" class="vanilla-calendar"></div>
     </div>
-    <div class="col">
+    <div class="col-4">
         Осталось сегодня
         <div id="MyClockDisplay" class="clock-dyn" onload="checkPause()"></div>
         <br>
@@ -29,39 +29,27 @@
                 при этом, суммарно перерывов на: {{ breaks_sum }}
             {%endif%}
         {%endif%}
-
-
     </div>
-    {%endif%}
 
-    {% if not current_user.is_authenticated %}
-    <div class="col-11">
-        <a>Главная страница, Добро пожаловать!!!</a>
-    </div>
-    {%endif%}
 
-    <div class="col-1">
+    <div class="col-3 pl-5 pr-5">
     <!--clock start-->
         <div class="clock">
-            <div class="hour">
-                <div class="hr" id="hr">
-                </div>
-            </div>
-            <div class="min">
-                <div class="mn" id="mn">
-                </div>
-            </div>
-            <div class="sec">
-                <div class="sc" id="sc">
-                </div>
-            </div>
+            <div class="wrap"></div>
+                <span class="hour"></span>
+                <span class="minute"></span>
+                <span class="second"></span>
+                <span class="dot"></span>
+
         </div>
+        <div class="col-1"></div>
+
     <!--clock end-->
     </div>
 </div>
 
-<link rel="stylesheet" href="/css/vis_clock.css" />
-<script src="/js/vis_clock.js"></script>
+<link rel="stylesheet" href="/css/clock.css" />
+<script src="/js/clock.js"></script>
 
 <!---->
 
@@ -72,8 +60,7 @@
 
 <script type="text/javascript">
 
-
-
+    clock();
 
 let DateToShow = new Date();
 {% if today %}
@@ -86,7 +73,7 @@ let myCalendar = new VanillaCalendar({
     selector: "#myCalendar",
     pastDates: 1,
     datesFilter: 0,
-    onSelect: (data, elem) => { send_selected_date(data, elem) },
+    onSelect: (data, elem) => { sendSelDate(data, elem) },
     date: new Date(),
     todaysDate: DateToShow,
     availableWeekDays: [
@@ -100,8 +87,8 @@ let myCalendar = new VanillaCalendar({
 
 })
 </script>
-
 {% endblock %}
+
 
 {% block control %}
 <div class="row">
@@ -141,79 +128,14 @@ let myCalendar = new VanillaCalendar({
     </div>
     <div class="col-3">
         <div class="input-group">
-            <button class="btn btn-outline-secondary" id="paused" name="paused" value="{{is_pause}}" onclick="clickPause(value)">{{pause_label}}</button>
+            <button class="btn btn-outline-secondary" id="paused" name="paused" value="{{is_pause}}" onclick="clickPause(value)"></button>
         </div>
     </div>
 </div>
 
 
-
 <!--dyn clock-->
 <script type="text/javascript">
-
-    function checkFinished(){
-       let finishd = document.getElementById("finishd");
-       return (finishd.value === "True" || ("{{today != None}}" !== "True")) ? 1: 0;
-    }
-
-    function clickPause(v) {
-        if (checkFinished()){
-            return
-        }
-    let pButt = document.getElementById("paused");
-    pButt.value = (v === "1") ? "0" : "1";
-    setPauseLabel();
-    fetch(`/setday?paused=1`).then(res => refreshBreaks());
-}
-
-
-    function calcShowTime(h, m, s){
-        if (s > 0){
-            s -= 1;
-        } else {
-            s = (m>0) ? 59 : 0;
-            if (m>0){
-                m -= 1;
-            } else {
-                m = (h>0) ? 59 : 0;
-                s = (m>0) ? 59 : 0;
-                h = (h>0) ? h-1: h;
-            }
-        }
-        return (h, m, s)
-    }
-
-    let was_started = 1;
-    let h = 0; // 0 - 23
-    let m = 0; // 0 - 59
-    let s = 0; // 0 - 59
-
-
-
-
-async function showTime(){
-    if (was_started===1){
-            let response = await fetch(`/refreshtimer?do=true`);
-            let resp = await response.json();
-            h = resp['getHours'];
-            m = resp['getMinutes'];
-            s = resp['getSeconds'];
-            was_started = 0;
-        }
-        let is_pause = document.getElementById("paused");
-    if (is_pause.value ==="0"){
-        h, m, s = calcShowTime(h, m, s);
-    }
-
-
-    let time = setTime(h, m, s);
-
-    document.getElementById("MyClockDisplay").innerText = time;
-    document.getElementById("MyClockDisplay").textContent = time;
-
-    setTimeout(showTime, 1000);
-
-}
 
 showTime();
 window.onload = refreshBreaks();
