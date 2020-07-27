@@ -28,16 +28,16 @@ window.calcShowTime = function calcShowTime(h, m, s){
         if (s > 0){
             s -= 1;
         } else {
-            s = (m>0) ? 59 : 0;
             if (m>0){
                 m -= 1;
+                s = 59;
             } else {
                 m = (h>0) ? 59 : 0;
                 s = (m>0) ? 59 : 0;
                 h = (h>0) ? h-1: h;
             }
         }
-        return (h, m, s)
+        return {hour: h, minute: m, second:  s}
     };
 
 window.showTime = async function showTime(h=0, m=0, s=0, was_started=1){
@@ -51,9 +51,11 @@ window.showTime = async function showTime(h=0, m=0, s=0, was_started=1){
         }
         let is_pause = document.getElementById("paused");
     if (is_pause.value ==="0"){
-        h, m, s = calcShowTime(h, m, s);
+        let calculated = calcShowTime(h, m, s);
+        h = calculated.hour;
+        m = calculated.minute;
+        s = calculated.second;
     }
-
 
     let time = setTime(h, m, s);
 
@@ -70,7 +72,7 @@ window.checkFinished = function checkFinished(){
     };
 
 window.clickPause = function clickPause(v) {
-        if (checkFinished()){
+        if (checkFinished()==="True"){
             return
         }
     let pButt = document.getElementById("paused");
