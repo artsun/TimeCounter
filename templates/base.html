@@ -4,30 +4,32 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Nunito">
+
   <style>
 
-    button.cast { /* Абзац с классом cite */
-    background: #3273DC; /* Синий цвет текста */
-    }
-      div.cast {
-          background: #00D1B2;
-      }
+      button.cast {background: #3273DC; }
+      div.cast { background: #00D1B2; }
+      nav.cast { background: #00D1B2; }
+      body { font-family: 'Nunito';}
+      h4 {color: #FAFAFA;}
+
   </style>
 </head>
 <body>
 <div class="row" >
-<nav class="navbar navbar-expand-md navbar-dark bg-primary fixed-top">
+<nav class="navbar navbar-expand-md navbar-dark fixed-top cast">
     <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
         <ul class="navbar-nav mr-auto">
             {% if current_user.is_authenticated %}
             <li class="nav-item">
-                <a class="nav-link" href="#">Статистика <b>{{cuser.name}}</b></a>
+                <a class="nav-link" href="#"><h4>Статистика <b>{{cuser.name}}</b></h4></a>
             </li>
             {% endif %}
         </ul>
     </div>
     <div class="mx-auto order-0">
-        <a class="navbar-brand mx-auto" href="#">TimeCounter</a>
+        <a class="navbar-brand mx-auto" href="#"><h3><b>TimeCounter</b></h3></a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".dual-collapse2">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -35,24 +37,24 @@
     <div class="navbar-collapse collapse w-100 order-3 dual-collapse2">
         <ul class="navbar-nav ml-auto">
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('common.main_page') }}">Главная</a>
+                <a class="nav-link" href="{{ url_for('common.main_page') }}"><h4>Главная</h4></a>
             </li>
             {% if current_user.is_authenticated %}
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('common.profile_page') }}">Профиль</a>
+                <a class="nav-link" href="{{ url_for('common.profile_page') }}"><h4>Профиль</h4></a>
             </li>
             {% endif %}
             {% if not current_user.is_authenticated %}
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('auth.login_page') }}">Авторизоваться</a>
+                <a class="nav-link" href="{{ url_for('auth.login_page') }}"><h4>Авторизоваться</h4></a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('auth.signup_page') }}">Регистрация</a>
+                <a class="nav-link" href="{{ url_for('auth.signup_page') }}"><h4>Регистрация</h4></a>
             </li>
             {% endif %}
             {% if current_user.is_authenticated %}
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('auth.logout_page') }}">Выход</a>
+                <a class="nav-link" href="{{ url_for('auth.logout_page') }}"><h4>Выход</h4></a>
             </li>
             {% endif %}
         </ul>
@@ -67,6 +69,10 @@
     {% if current_user.is_authenticated %}
         <div class="row">
             {% block show %} {% endblock %}
+        </div>
+    <div class="row mt-5 mb-5"></div>
+        <div class="row">
+            {%block bar%} {% endblock %}
         </div>
     <div class="row mt-5 mb-5"></div>
         <div class="row">
