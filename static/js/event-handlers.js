@@ -40,13 +40,16 @@ window.calcShowTime = function calcShowTime(h, m, s){
         return {hour: h, minute: m, second:  s}
     };
 
-window.showTime = async function showTime(h=0, m=0, s=0, was_started=1){
+window.showTime = async function showTime(now=0, max=100, h=0, m=0, s=0, was_started=1){
     if (was_started===1){
             let response = await fetch(`/refreshtimer?do=true`);
             let resp = await response.json();
+            now = resp['now'];
+            max = resp['max'];
             h = resp['getHours'];
             m = resp['getMinutes'];
             s = resp['getSeconds'];
+            console.log(resp);
             was_started = 0;
         }
         let is_pause = document.getElementById("paused");
@@ -55,14 +58,17 @@ window.showTime = async function showTime(h=0, m=0, s=0, was_started=1){
         h = calculated.hour;
         m = calculated.minute;
         s = calculated.second;
+        now -= 1;
     }
+    let width = 100 - (now / (max / 100));
+    barSet(now, max, width);
 
     let time = setTime(h, m, s);
 
     document.getElementById("MyClockDisplay").innerText = time;
     document.getElementById("MyClockDisplay").textContent = time;
 
-    setTimeout(function (){showTime(h, m, s, 0);}, 1000);
+    setTimeout(function (){showTime(now, max, h, m, s, 0);}, 1000);
 
 };
 
@@ -79,4 +85,25 @@ window.clickPause = function clickPause(v) {
     pButt.value = (v === "1") ? "0" : "1";
     setPauseLabel();
     fetch(`/setday?paused=1`).then(res => refreshBreaks());
+};
+
+function barSet(now, max, width){
+    let bar = document.getElementById("bar");
+    bar.setAttribute("aria-valuenow", now);
+    bar.setAttribute("aria-valuemax", max);
+    bar.setAttribute("style", `width: ${width}%`);
+    bar.innerHTML = `<b>${Math.round(width)}%</b>`;
+}
+
+window.barOnloadSetter = function barOnloadSetter() {
+    let start = document.getElementById("start");
+    let fin = document.getElementById("fin");
+    if (start === null || fin === null){
+        barSet(0, 100, 0);
+        return
+    }
+    start = start.getAttribute("value");
+    fin = fin.getAttribute("value");
+    let complete = start / (fin / 100);
+    barSet(start, fin, complete);
 };
