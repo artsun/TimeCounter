@@ -16,13 +16,6 @@ HMS = namedtuple('HMS', ['start', 'stop', 'duration', 'done'])
 
 common = Blueprint('common', __name__)
 
-@common.route('/istrue', methods=['GET'])
-def istrue():
-    cuser = User.check_anon(current_user)
-    day = cuser.day() if cache.get(cuser.pk) is None else Wday.query.filter_by(pk=cache.get('day')).first()
-    br = Break.today(day).filter_by(actual=True).first()
-    return '0' if br is None else '1'
-
 
 @common.route('/', methods=['GET'])
 def main_page():
@@ -52,7 +45,12 @@ def refresh_timer():
     if request.args.get('do') is not None:
         cuser = User.check_anon(current_user)
         day = cuser.day() if cache.get(cuser.pk) is None else Wday.by_pk(cache.get(cuser.pk))
-        return day.left()
+        if day is not None:
+            left = day.left()
+            left['now'], left['max'] = (day.finish - datetime.now()).seconds, (day.finish - day.start).seconds
+        else:
+            left = dict(getHours=0, getMinutes=0, getSeconds=0, now=0, max=100)
+        return left
 
 
 @common.route('/refreshbreaks', methods=['GET'])
@@ -60,7 +58,7 @@ def refresh_breaks():
     if request.args.get('do') is not None:
         cuser = User.check_anon(current_user)
         day = cuser.day() if cache.get(cuser.pk) is None else Wday.by_pk(cache.get(cuser.pk))
-        res = day.breaks_strings()
+        res = day.breaks_strings() if day is not None else ''
         return dict(breaks=res)
 
 
