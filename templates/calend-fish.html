@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+        {% block content %}
+<div class="row">
+    <div class="col-4">
+        {% block calendar %}{% endblock %}
+    </div>
+    <div class="col-4">
+        {% block timer %}{% endblock %}
+    </div>
+    <div class="col-3 pl-5 pr-5">
+        {% block watches %}{% endblock %}
+    </div>
+    <div class="col-1"></div>
+</div>
+<div class="row mt-5 mb-5"></div>
+
+{% block bar %}{% endblock %}
+
+<div class="row mt-5 mb-5"></div>
+
+<div class="row">{% block control %}{% endblock %}
+</div>
+{% endblock %}
