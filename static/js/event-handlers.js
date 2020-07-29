@@ -88,22 +88,11 @@ window.clickPause = function clickPause(v) {
 };
 
 function barSet(now, max, width){
+    width = (now >= max) ? 0 : width;
+    width = (width > 100) ? 100 : width;
     let bar = document.getElementById("bar");
     bar.setAttribute("aria-valuenow", now);
     bar.setAttribute("aria-valuemax", max);
     bar.setAttribute("style", `width: ${width}%`);
     bar.innerHTML = `<b>${Math.round(width)}%</b>`;
 }
-
-window.barOnloadSetter = function barOnloadSetter() {
-    let start = document.getElementById("start");
-    let fin = document.getElementById("fin");
-    if (start === null || fin === null){
-        barSet(0, 100, 0);
-        return
-    }
-    start = start.getAttribute("value");
-    fin = fin.getAttribute("value");
-    let complete = start / (fin / 100);
-    barSet(start, fin, complete);
-};
