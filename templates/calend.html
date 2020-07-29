@@ -1,117 +1,87 @@
-{% extends "base.html" %}
+{% extends "calend-fish.html" %}
 
 
-{% block show %}
+{%block title%}
+    Main
+{%endblock%}
 
-
-    <div class="col-4">
-        <div id="myCalendar" class="vanilla-calendar"></div>
-    </div>
-    <div class="col-4">
-        Осталось сегодня
-        <div id="MyClockDisplay" class="clock-dyn" onload="checkPause()"></div>
-        <br>
-        {% if today %}
-            <div id="start" value="{{(today.start.now()-today.start).seconds}}">
-                Начало {{today.start.strftime('%H')}}:{{today.start.strftime('%M')}}:{{today.start.strftime('%S')}}
-                | {{today.start.day}} {{show_month}}
-            </div>
-        <br>
-            <div id="fin" value="{{(today.stop-today.start).seconds}}">
-                Финиш {{today.stop.strftime('%H')}}:{{today.stop.strftime('%M')}}:{{today.stop.strftime('%S')}}
-                | {{today.stop.day}} {{show_month}}
-            </div>
-        {%endif%}
-        <br>
-        <br>
-        <div id="Breaks"></div>
-        {% if today and today.done%}
-        <br>
-            Продолжительность составила: {{today.duration}}
-            {% if breaks_sum %}
-                <br>
-                при этом, суммарно перерывов на: {{ breaks_sum }}
-            {%endif%}
-        {%endif%}
-    </div>
-
-
-    <div class="col-3 pl-5 pr-5">
-    <!--clock start-->
-        <div class="clock">
-            <div class="wrap"></div>
-                <span class="hour"></span>
-                <span class="minute"></span>
-                <span class="second"></span>
-                <span class="dot"></span>
-
-        </div>
-        <div class="col-1"></div>
-
-    <!--clock end-->
-    </div>
-
-
-<link rel="stylesheet" href="/css/clock.css" />
-<script src="/js/clock.js"></script>
-
-<!---->
-
-<link rel="stylesheet" href="/css/vanilla-calendar.css">
-<script src="/js/vanilla-calendar.js"></script>
-
-<script src="/js/event-handlers.js"></script>
-
-<script type="text/javascript">
-
-    clock();
-
-let DateToShow = new Date();
-{% if today %}
-DateToShow.setDate({{today.start.day}});
-DateToShow.setMonth({{today.start.month-1}});
-DateToShow.setYear({{today.start.year}});
-{% endif %}
-
-let myCalendar = new VanillaCalendar({
-    selector: "#myCalendar",
-    pastDates: 1,
-    datesFilter: 0,
-    onSelect: (data, elem) => { sendSelDate(data, elem) },
-    date: new Date(),
-    todaysDate: DateToShow,
-    availableWeekDays: [
-        //{day: 'monday', others: values},
-    ],
-    availableDates: [
-        //{date: '2020-07-07', others: values},
-    ],
-    months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-    shortWeekday: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-
-})
-</script>
+{% block navLeft %}
+            {% if current_user.is_authenticated %}
+            <li class="nav-item">
+                <a class="nav-link" href="#"><h4>Статистика <b>{{cuser.name}}</b></h4></a>
+            </li>
+            {% endif %}
 {% endblock %}
 
+{% block mainHello %}
+    <a>Главная страница, Добро пожаловать!!!</a>
+{% endblock %}
+
+
+{% block calendar %}
+    <div id="myCalendar" class="vanilla-calendar"></div>
+    <link rel="stylesheet" href="/css/vanilla-calendar.css">
+
+{% endblock %}
+
+{% block timer %}
+    <div id="MyClockDisplay" class="clock-dyn" onload="checkPause()"></div>
+{% endblock %}
+
+{% block watches %}
+    <div class="clock">
+        <div class="wrap"></div>
+        <span class="hour"></span>
+        <span class="minute"></span>
+        <span class="second"></span>
+        <span class="dot"></span>
+    </div>
+
+{% endblock %}
+
+
+
 {% block bar %}
-    <div class="col-2"></div>
-            <div class="col-8">
+<div class="row pb-5">
+    <div class="col-2 mr-0 pr-0 ml-5 pl-5">
+        {% if today %}<h4><b>
+         {{today.start.day}} {{show_month}} | {{today.start.strftime('%H')}}:{{today.start.strftime('%M')}}:{{today.start.strftime('%S')}}
+        </b></h4>{% endif %}
+    </div>
+            <div class="col-7">
                 <div class="progress" style="height: 30px; font-size: 150%;">
                     <div id="bar" class="progress-bar progress-bar-striped bg-info progress-bar-animated" role="progressbar" style="width: 100%" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
                 </div>
             </div>
-    <div class="col-2"></div>
+    <div class="col-2 ml-5 mr-5">
+        {% if today %}<h4><b>
+        {{today.stop.strftime('%H')}}:{{today.stop.strftime('%M')}}:{{today.stop.strftime('%S')}} | {{today.stop.day}} {{show_month}}
+        </b></h4>{% endif %}
+    </div>
+</div>
+<div class="row">
+    <div class="col-2 mr-0 pr-0 ml-5 pl-5"></div>
+    <div class="col-7">
+        <form method="POST" action="/">
+            <div class="input-group">
+                <div class="col-4 p-0 m-0">
+                <input type="number" class="form-control input-lg" id="begind" name="begind" placeholder="часов" min="1" max="16" value="{{begind}}">
+                </div>
+                <div class="col-8 p-0 m-0">
+                <button class="btn btn-success btn-block">Старт</button>
+                </div>
+        </form>
+    </div>
+    </div>
+    <div class="col-2 ml-5 mr-5"></div>
+
+</div>
 {% endblock %}
 
 {% block control %}
     <div class="col-1"></div>
-    <div class="col-2">
-        <form method="POST" action="/">
-            <div class="input-group">
-                <input type="number" class="form-control" id="begind" name="begind" placeholder="часов" min="1" max="16" value="{{begind}}">
-                <button class="btn btn-success">Старт</button>
-            </div>
-        </form>
+    <div class="col-2" style="display: none;">
+
     </div>
     <div class="col-2">
         <form method="POST" action="/">
@@ -145,10 +115,47 @@ let myCalendar = new VanillaCalendar({
 
 <div class="row mt-3 mb-3"></div>
 <div class="row"></div>
+                <div id="Breaks"></div>
+        {% if today and today.done%}
+        <br>
+            Продолжительность составила: {{today.duration}}
+            {% if breaks_sum %}
+                <br>
+                при этом, суммарно перерывов на: {{ breaks_sum }}
+            {%endif%}
+        {%endif%}
 
+{% endblock %}
 
-<!--dyn clock-->
+        {% block scripts %}
+
 <script type="text/javascript">
+    clock();
+
+let DateToShow = new Date();
+{% if today %}
+DateToShow.setDate({{today.start.day}});
+DateToShow.setMonth({{today.start.month-1}});
+DateToShow.setYear({{today.start.year}});
+{% endif %}
+
+let myCalendar = new VanillaCalendar({
+    selector: "#myCalendar",
+    pastDates: 1,
+    datesFilter: 0,
+    onSelect: (data, elem) => { sendSelDate(data, elem) },
+    date: new Date(),
+    todaysDate: DateToShow,
+    availableWeekDays: [
+        //{day: 'monday', others: values},
+    ],
+    availableDates: [
+        //{date: '2020-07-07', others: values},
+    ],
+    months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    shortWeekday: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+});
 
 window.onload = showTime();
 window.onload = refreshBreaks();
