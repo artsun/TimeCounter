@@ -1,24 +1,28 @@
 {% extends "base.html" %}
 
         {% block content %}
+
 <div class="row">
-    <div class="col-4">
-        {% block calendar %}{% endblock %}
+
+    <div class="col-3">
+        {% if current_user.is_authenticated %}{% block calendar %}{% endblock %}{% endif %}
     </div>
-    <div class="col-4">
-        {% block timer %}{% endblock %}
+    <div class="col-5 border rounded pl-0 pr-0 ml-0 mr-0" style="border-width:30px">
+        {% if current_user.is_authenticated %}{% block timer %}{% endblock %}{% endif %}
     </div>
+
     <div class="col-3 pl-5 pr-5">
         {% block watches %}{% endblock %}
     </div>
     <div class="col-1"></div>
 </div>
 <div class="row mt-5 mb-5"></div>
-
+{% if current_user.is_authenticated %}
 {% block bar %}{% endblock %}
 
 <div class="row mt-5 mb-5"></div>
 
 <div class="row">{% block control %}{% endblock %}
 </div>
+{% endif %}
 {% endblock %}
