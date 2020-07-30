@@ -25,19 +25,16 @@ def main_page():
     if day is not None:
         print(Wday().get_breaks())
         cache.set(cuser.pk, day.pk)
-
         break_now = Break.today(day).filter_by(actual=True).first()
         is_pause = 1 if break_now else 0
         show_month = MONTHS[day.finish.month]
-        begind = day.longitude
         today = HMS(day.start, day.finish, delta_to_hms(day.finish-day.start), day.done)
         breaks_sum = day.calc_breaks()
         breaks_sum = delta_to_hms(breaks_sum) if breaks_sum else ''
     else:
-        is_pause, begind, today, show_month, breaks_sum = 0, 8, None, '', ''
+        is_pause, today, show_month, breaks_sum = 0, None, '', ''
 
-    return render_template('calend.html', cuser=cuser, begind=begind, breaks_sum=breaks_sum,
-                           is_pause=is_pause, show_month=show_month, today=today)
+    return render_template('calend.html', cuser=cuser, breaks_sum=breaks_sum, is_pause=is_pause, show_month=show_month, today=today)
 
 
 @common.route('/refreshtimer', methods=['GET'])
@@ -75,15 +72,18 @@ def setday():
                 db.session.add(Break(day_pk=day.pk, actual=True))
                 db.session.commit()
         return dict(done='ok')
+    if request.args.get("started") is not None:
+        return dict(started=1) if day is not None and day.finish > datetime.now() else dict(started=0)
 
 
 @common.route('/', methods=['POST'])
 def set_day():
+    print(request.form)
     cuser = User.check_anon(current_user)
     day = Wday.by_user_today(cuser)
-    if request.form.get("begind") is not None:
+    if request.form.get("begindStore") is not None:
         if cuser and day is None:
-            begind = int(request.form.get("begind"))
+            begind = int(request.form.get("begindStore"))
             day = Wday(user_pk=cuser.pk, longitude=begind)
             day.update_session()
             day.finish = day.calc_finish()
