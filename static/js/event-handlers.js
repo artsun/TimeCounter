@@ -21,7 +21,7 @@ window.refreshBreaks = function(){
 
 window.setPauseLabel = function(){
     let pButt = document.getElementById("paused");
-    pButt.innerText = (pButt.value === "0") ? "Пауза" : "Продолжить";
+    pButt.innerHTML = (pButt.value === "0") ? "<b>Пауза</b>" : "<b>Продолжить</b>";
 };
 
 window.calcShowTime = function calcShowTime(h, m, s){
@@ -95,4 +95,36 @@ function barSet(now, max, width){
     bar.setAttribute("aria-valuemax", max);
     bar.setAttribute("style", `width: ${width}%`);
     bar.innerHTML = `<b>${Math.round(width)}%</b>`;
+}
+
+window.hasDayStarted = function hasDayStarted () {
+        resp = fetch(`/setday?started=1`).then(res => res.json()).then(res => (res['started'] === 1) ? execStart() : execStop());
+    };
+
+function execStart (){ showTime(); doHide(1); }
+
+function execStop () { showRange(); doHide(0); }
+
+function showRange(val=null) {
+    val = (val===null) ? document.getElementById('begind').value : val;
+    document.getElementById("MyClockDisplay").innerText = `${val} час.`;
+    doHide()
+}
+
+window.updateRange = function updateRange (val){
+        document.getElementById('begind').value=val;
+        document.getElementById('begindStore').value=val;
+        showRange(val);
+};
+
+function doHide (started){
+    if (started === 1){
+        document.getElementById('rowBegind').style = "display: none;";
+        document.getElementById('rowRange').style = "display: none;";
+        document.getElementById('rowControl').style = "";
+    } else {
+        document.getElementById('rowBegind').style = "";
+        document.getElementById('rowRange').style = "";
+        document.getElementById('rowControl').style = "display: none;";
+    }
 }
