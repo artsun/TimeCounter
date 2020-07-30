@@ -23,7 +23,7 @@ class User(UserMixin, db.Model):
 
     def day(self, dmy: tuple = None):
         dmy = (f'{datetime.now().day}', f'{datetime.now().month}', f'{datetime.now().year}') if dmy is None else dmy
-        day = [day for day in self.days if (f'{day.day}', f'{day.month}', f'{day.year}') == dmy]
+        day = [day.check_fin() for day in self.days if (f'{day.day}', f'{day.month}', f'{day.year}') == dmy]
         return day[0] if len(day) == 1 else None
 
     @staticmethod
@@ -43,6 +43,12 @@ class Wday(db.Model):
     finish = db.Column(db.DateTime)
     done = db.Column(db.Boolean, default=False)
     breaks = relationship("Break", cascade="all,delete", backref="wday")
+
+    def check_fin(self):
+        if datetime.now() > self.finish:
+            self.done = True
+            self.update_session()
+        return self
 
     def recalc_longitude(self) -> int:
         delta = (self.finish-self.start)
