@@ -27,14 +27,15 @@ def main_page():
         cache.set(cuser.pk, day.pk)
         break_now = Break.today(day).filter_by(actual=True).first()
         is_pause = 1 if break_now else 0
-        show_month = MONTHS[day.finish.month]
+        month_start, month_stop = MONTHS[day.start.month], MONTHS[day.finish.month]
         today = HMS(day.start, day.finish, delta_to_hms(day.finish-day.start), day.done)
         breaks_sum = day.calc_breaks()
         breaks_sum = delta_to_hms(breaks_sum) if breaks_sum else ''
     else:
-        is_pause, today, show_month, breaks_sum = 0, None, '', ''
+        is_pause, today, breaks_sum, month_start, month_stop = 0, None, '', '', ''
 
-    return render_template('calend.html', cuser=cuser, breaks_sum=breaks_sum, is_pause=is_pause, show_month=show_month, today=today)
+    return render_template('calend.html', cuser=cuser, breaks_sum=breaks_sum, is_pause=is_pause, today=today,
+                           month_start=month_start, month_stop=month_stop)
 
 
 @common.route('/refreshtimer', methods=['GET'])
@@ -88,9 +89,9 @@ def set_day():
             day.update_session()
             day.finish = day.calc_finish()
             day.update_session()
-    if request.form.get("changed") is not None:
+    if request.form.get("changedStore") is not None:
         if day is not None and day.finish > datetime.now():
-            day.longitude = int(request.form.get("changed"))
+            day.longitude = int(request.form.get("changedStore"))
             day.update_session()
             day.finish = day.calc_finish()
             day.update_session()
