@@ -41,6 +41,10 @@ window.calcShowTime = function calcShowTime(h, m, s){
     };
 
 window.showTime = async function showTime(now=0, max=100, h=0, m=0, s=0, was_started=1){
+        let inChange = document.getElementById('btnChg');
+        if (inChange.value === "1") {
+            return
+        }
     if (was_started===1){
             let response = await fetch(`/refreshtimer?do=true`);
             let resp = await response.json();
@@ -52,7 +56,7 @@ window.showTime = async function showTime(now=0, max=100, h=0, m=0, s=0, was_sta
             console.log(resp);
             was_started = 0;
         }
-        let is_pause = document.getElementById("paused");
+    let is_pause = document.getElementById("paused");
     if (is_pause.value ==="0"){
         let calculated = calcShowTime(h, m, s);
         h = calculated.hour;
@@ -68,8 +72,7 @@ window.showTime = async function showTime(now=0, max=100, h=0, m=0, s=0, was_sta
     document.getElementById("MyClockDisplay").innerText = time;
     document.getElementById("MyClockDisplay").textContent = time;
 
-    setTimeout(function (){showTime(now, max, h, m, s, 0);}, 1000);
-
+    setTimeout(function (){showTime(now, max, h, m, s, 0);}, 1000)
 };
 
 window.checkFinished = function checkFinished(){
@@ -108,17 +111,19 @@ function execStop () { showRange(); doHide(0); }
 function showRange(val=null) {
     val = (val===null) ? document.getElementById('begind').value : val;
     document.getElementById("MyClockDisplay").innerText = `${val} час.`;
-    doHide()
+    //doHide()
 }
 
 window.updateRange = function updateRange (val){
         document.getElementById('begind').value=val;
         document.getElementById('begindStore').value=val;
+        document.getElementById('changedStore').value=val;
         showRange(val);
 };
 
 function doHide (started){
-    if (started === 1){
+    tdStyle(started);
+    if (started === 1) {
         document.getElementById('rowBegind').style = "display: none;";
         document.getElementById('rowRange').style = "display: none;";
         document.getElementById('rowControl').style = "";
@@ -128,3 +133,36 @@ function doHide (started){
         document.getElementById('rowControl').style = "display: none;";
     }
 }
+
+window.clickChange = function clickChange () {
+    document.getElementById('rowBegind').style = "display: none;";
+    document.getElementById('rowRange').style = "";
+    document.getElementById('rowChanged').style = "";
+    document.getElementById('rowControl').style = "display: none;";
+    document.getElementById('btnChg').value = "1";
+    let val = document.getElementById('changedStore');
+    document.getElementById("MyClockDisplay").innerText = `${val.value} час.`;
+};
+
+// метки для выполненных дней
+window.daysDone = function daysDone () {
+        let els = document.getElementsByClassName('vanilla-calendar-date vanilla-calendar-date--active');
+        for (let el of els) {
+            d = new Date(el.getAttribute('data-calendar-date'));
+            if (d.getDay() === 1) {
+                el.style = "background: #00D1B2;";
+            }
+        }
+    };
+
+    function tdStyle (active) {
+        td = document.getElementsByClassName('vanilla-calendar-date vanilla-calendar-date--active vanilla-calendar-date--today');
+        if (active === 1) {
+            td[0].setAttribute("style", "background: #5bc0de;");
+        } else {
+            td[0].setAttribute("style", "");
+        }
+    }
+
+
+
