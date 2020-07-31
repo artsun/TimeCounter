@@ -25,7 +25,7 @@
 {% endblock %}
 
 {% block timer %}
-    <div id="MyClockDisplay" class="clock-dyn" onload="checkPause()"></div>
+      <div id="MyClockDisplay" class="clock-dyn" onload="checkPause()"></div>
 {% endblock %}
 
 {% block watches %}
@@ -41,7 +41,7 @@
 
 
 
-{% block bar %}
+{% block control %}
 <div class="row" id="rowRange">
     <div class="col-2 mr-0 pr-0 ml-5 pl-5"></div>
     <div class="col-7 pt-0 pb-2">
@@ -55,7 +55,7 @@
 <div class="row pb-3">
     <div class="col-2 mr-0 pr-0 ml-5 pl-5 text-white">
         {% if today %}<h4><b>
-         {{today.start.day}} {{show_month}} | {{today.start.strftime('%H')}}:{{today.start.strftime('%M')}}:{{today.start.strftime('%S')}}
+         {{today.start.day}} {{month_start}} | {{today.start.strftime('%H')}}:{{today.start.strftime('%M')}}:{{today.start.strftime('%S')}}
         </b></h4>{% endif %}
     </div>
             <div class="col-7">
@@ -65,7 +65,7 @@
             </div>
     <div class="col-2 ml-5 mr-5 text-white">
         {% if today %}<h4><b>
-        {{today.stop.strftime('%H')}}:{{today.stop.strftime('%M')}}:{{today.stop.strftime('%S')}} | {{today.stop.day}} {{show_month}}
+        {{today.stop.strftime('%H')}}:{{today.stop.strftime('%M')}}:{{today.stop.strftime('%S')}} | {{today.stop.day}} {{month_stop}}
         </b></h4>{% endif %}
     </div>
 </div>
@@ -82,17 +82,27 @@
     </div>
     <div class="col-2 ml-5 mr-5"></div>
 </div>
+<div class="row" id="rowChanged" style = "display: none;">
+    <div class="col-2 mr-0 pr-0 ml-5 pl-5"></div>
+    <div class="col-7 pt-0 pb-2">
+        <form method="POST" action="/">
+            <div class="input-group">
+                <input type="number" id="changedStore" name="changedStore" min="1" max="16" value="8" style = "display: none;">
+                <br><br>
+                <button class="btn btn-outline-light btn-block"><b>Изменить</b></button>
+            </div>
+        </form>
+    </div>
+    <div class="col-2 ml-5 mr-5"></div>
+</div>
 <div class="row" id="rowControl" >
     <div class="col-2 mr-0 pr-0 ml-5 pl-5"></div>
     <div class="col-7 pt-0 pb-2">
         <div class="row">
         <div class="col-3 pr-0 mr-0">
-            <form method="POST" action="/">
                 <div class="input-group">
-                    <input type="number" class="form-control" id="changed" name="changed" placeholder="часов" min="0" max="16" value="0">
-                    <button class="btn btn-secondary"><b>Изменить</b></button>
+                    <button class="btn btn-outline-light btn-block" id="btnChg" value="0" onclick="clickChange()"><b>Изменить</b></button>
                 </div>
-            </form>
         </div>
     <div class="col-3 p-0 m-0">
         <form method="POST" action="/">
@@ -120,18 +130,11 @@
 </div>
 {% endblock %}
 
-{% block control %}
-    <div class="col-1"></div>
-    <div class="col-2" style="display: none;">
+{% block breaks %}
 
-    </div>
-
-
-    <div class="col-2"></div>
-
-<div class="row mt-3 mb-3"></div>
 <div class="row"></div>
-                <div id="Breaks"></div>
+
+<div id="Breaks"></div>
         {% if today and today.done%}
         <br>
             Продолжительность составила: {{today.duration}}
@@ -147,7 +150,7 @@
 
 <script type="text/javascript">
 
-    clock();
+clock();
 
 let DateToShow = new Date();
 {% if today %}
@@ -156,26 +159,13 @@ DateToShow.setMonth({{today.start.month-1}});
 DateToShow.setYear({{today.start.year}});
 {% endif %}
 
-let myCalendar = new VanillaCalendar({
-    selector: "#myCalendar",
-    pastDates: 1,
-    datesFilter: 0,
-    onSelect: (data, elem) => { sendSelDate(data, elem) },
-    date: new Date(),
-    todaysDate: DateToShow,
-    availableWeekDays: [
-        //{day: 'monday', others: values},
-    ],
-    availableDates: [
-        //{date: '2020-07-07', others: values},
-    ],
-    months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-    shortWeekday: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+setCalendar(DateToShow);
 
-});
 
+//window.onload = daysDone();
 window.onload = hasDayStarted();
 window.onload = refreshBreaks();
 window.onload = setPauseLabel();
+
 </script>
 {% endblock %}
