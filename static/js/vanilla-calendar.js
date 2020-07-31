@@ -1,9 +1,24 @@
-/*
-    Vanilla AutoComplete v0.1
-    Copyright (c) 2019 Mauro Marssola
-    GitHub: https://github.com/marssola/vanilla-calendar
-    License: http://www.opensource.org/licenses/mit-license.php
-*/
+
+window.setCalendar = function setCalendar (DateToShow) {
+    let myCalendar = new VanillaCalendar({
+    selector: "#myCalendar",
+    pastDates: 1,
+    datesFilter: 0,
+    onSelect: (data, elem) => { sendSelDate(data, elem) },
+    date: new Date(),
+    todaysDate: DateToShow,
+    availableWeekDays: [
+        //{day: 'monday', others: values},
+    ],
+    availableDates: [
+        //{date: '2020-07-07', others: '2020-07-07'},
+    ],
+    months: ['January', 'February', 'March', 'April', 'May', 'June', 'Июль', 'August', 'September', 'October', 'November', 'December'],
+    shortWeekday: ['Пнд', 'Втк', 'Срд', 'Чтв', 'Птц', 'Суб', 'Вск']
+
+});
+};
+
 let VanillaCalendar = (function () {
     function VanillaCalendar(options) {
         function addEvent(el, type, handler){
@@ -53,7 +68,9 @@ let VanillaCalendar = (function () {
             let available_date = opts.availableDates.filter(f => f.date === (date.getFullYear() + '-' + String(date.getMonth() + 1).padStart('2', 0) + '-' + String(date.getDate()).padStart('2', 0)))
             
             if (date.getDate() === 1) {
-                newDayElem.style.marginLeft = ((date.getDay()) * 14.28) + '%'
+                shift = (date.getDay() === 0) ? 6 : (date.getDay() - 1);
+
+                newDayElem.style.marginLeft = (shift * 14.28) + '%'
             }
             if (opts.date.getTime() <= opts.todaysDate.getTime() - 1 && !opts.pastDates) {
                 newDayElem.classList.add('vanilla-calendar-date--disabled')
@@ -147,6 +164,7 @@ let VanillaCalendar = (function () {
         }
         const setWeekDayHeader = function () {
             document.querySelector(`${opts.selector} .vanilla-calendar-week`).innerHTML = `
+                
                 <span>${opts.shortWeekday[0]}</span>
                 <span>${opts.shortWeekday[1]}</span>
                 <span>${opts.shortWeekday[2]}</span>
@@ -154,6 +172,8 @@ let VanillaCalendar = (function () {
                 <span>${opts.shortWeekday[4]}</span>
                 <span>${opts.shortWeekday[5]}</span>
                 <span>${opts.shortWeekday[6]}</span>
+                
+                               
             `
         }
         
