@@ -16,6 +16,4 @@ if __name__ == '__main__':
         alldays = [day.day for day in cal.itermonthdates(2020, x)]
         print(sliece_month(alldays))
 
-
-    #print()
     #print(datetime.date(2020, 7, 8).day)
